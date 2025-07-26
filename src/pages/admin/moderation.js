@@ -1,6 +1,7 @@
 import Head from 'next/head';
 import Link from 'next/link';
 import { useState } from 'react';
+import RoleGuard from '../../components/RoleGuard';
 
 export default function ArticleModeration() {
   // Data dummy untuk artikel yang menunggu moderasi
@@ -63,12 +64,14 @@ export default function ArticleModeration() {
   // Data dummy untuk kategori
   const categories = ['All', 'Bisnis', 'Marketing', 'Keuangan', 'Teknologi', 'Tips'];
 
-  return (
+// ... (bagian atas file: import, fungsi, state, dll) ...
+
+return (
+  <RoleGuard allowedRoles={['Admin']}> {/* RoleGuard dimulai di sini */}
     <>
       <Head>
         <title>Moderasi Artikel - Valerie CMS</title>
       </Head>
-
       <div className="min-h-screen bg-gray-50">
         {/* Navbar - sama seperti sebelumnya */}
         <nav className="bg-white shadow-sm">
@@ -206,7 +209,7 @@ export default function ArticleModeration() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                   />
                 </div>
-                
+
                 <div>
                   <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
                     Kategori
@@ -222,7 +225,7 @@ export default function ArticleModeration() {
                     ))}
                   </select>
                 </div>
-                
+
                 <div className="flex items-end">
                   <button
                     onClick={() => {
@@ -281,8 +284,8 @@ export default function ArticleModeration() {
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             <div className="flex space-x-2">
-                              <Link 
-                                href={`/admin/articles/${article.id}?preview=true`} 
+                              <Link
+                                href={`/admin/articles/${article.id}?preview=true`}
                                 target="_blank"
                                 className="text-primary-600 hover:text-primary-900"
                               >
@@ -341,5 +344,6 @@ export default function ArticleModeration() {
         </main>
       </div>
     </>
-  );
+  </RoleGuard>
+)
 }
