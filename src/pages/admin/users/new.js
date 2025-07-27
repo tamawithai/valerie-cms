@@ -1,9 +1,9 @@
 // src/pages/admin/users/new.js
 import Head from 'next/head';
 import Link from 'next/link';
-import ProtectedRoute from '../../components/ProtectedRoute';
 import { useState, useRef, useEffect } from 'react'; // Tambahkan useRef, useEffect
 import { useRouter } from 'next/router'; // Tambahkan useRouter
+import ProtectedRoute from '../../components/ProtectedRoute'; // Pastikan path ini benar
 import { useAuth } from '../../context/AuthContext'; // Tambahkan useAuth
 
 export default function NewUser() {

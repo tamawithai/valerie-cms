@@ -1,9 +1,8 @@
 import Head from 'next/head';
 import Link from 'next/link';
-import ProtectedRoute from '../../components/ProtectedRoute';
 import { useState } from 'react';
 import { useRouter } from 'next/router';
-
+import ProtectedRoute from '../../components/ProtectedRoute'; // Pastikan path ini benar
 
 export default function EditUser() {
   const router = useRouter();
