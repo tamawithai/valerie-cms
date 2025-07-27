@@ -2,6 +2,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useState } from 'react';
 import RoleGuard from '../../components/RoleGuard';
+import ProtectedRoute from '../../components/ProtectedRoute'; // Pastikan path ini benar
 
 export default function ArticleModeration() {
   // Data dummy untuk artikel yang menunggu moderasi

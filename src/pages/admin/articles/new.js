@@ -3,6 +3,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/router'; // Tambahkan ini untuk redirect
+import ProtectedRoute from '../../components/ProtectedRoute'; // Pastikan path ini benar
 
 export default function NewArticle() {
   const router = useRouter(); // Inisialisasi router

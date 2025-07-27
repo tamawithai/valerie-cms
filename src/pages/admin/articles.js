@@ -2,6 +2,7 @@
 import Head from 'next/head';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
+import ProtectedRoute from '../../components/ProtectedRoute'; // Pastikan path ini benar
 
 export default function Articles() {
   const [articles, setArticles] = useState([]); // Default kosong

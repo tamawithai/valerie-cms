@@ -2,6 +2,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useState } from 'react';
 import { useRouter } from 'next/router';
+import ProtectedRoute from '../../components/ProtectedRoute';
 
 export default function EditUser() {
   const router = useRouter();

@@ -1,6 +1,7 @@
 import Head from 'next/head';
 import Link from 'next/link';
 import { useState } from 'react';
+import ProtectedRoute from '../../components/ProtectedRoute'; // Pastikan path ini benar
 
 export default function LandingPageManager() {
   // Data dummy untuk landing page content
