@@ -22,6 +22,7 @@ export default function AdminDashboard() {
   ];
 
   return (
+    <ProtectedRoute> {/* Bungkus seluruh return dengan ProtectedRoute */}
     <>
       <Head>
         <title>Dashboard - Valerie CMS</title>
@@ -205,5 +206,6 @@ export default function AdminDashboard() {
         </main>
       </div>
     </>
+    </ProtectedRoute>
   );
 }

@@ -2,15 +2,17 @@
 import Head from 'next/head';
 import Link from 'next/link';
 import { useState } from 'react';
-import { useRouter } from 'next/router'; // Untuk redirect setelah login
+import { useRouter } from 'next/router';
+import { useAuth } from '../../context/AuthContext'; // Impor useAuth
 
 export default function AdminLogin() {
   const router = useRouter();
+  const { login } = useAuth(); // Dapatkan fungsi login dari context
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
-  const [error, setError] = useState(null); // State untuk error
+  const [error, setError] = useState(null);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -18,27 +20,15 @@ export default function AdminLogin() {
     setError(null);
 
     try {
-      const response = await fetch('/api/auth/login', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ email, password }),
-      });
+      const result = await login(email, password, rememberMe);
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || 'Login failed');
+      if (result.success) {
+        alert('Login berhasil!');
+        // Redirect ke dashboard
+        router.push('/admin/dashboard');
+      } else {
+        throw new Error(result.message);
       }
-
-      // Jika login berhasil
-      alert('Login berhasil!');
-      // Redirect ke dashboard
-      router.push('/admin/dashboard');
-      // CATATAN: Untuk implementasi penuh, server harus mengatur cookie session
-      // dan client harus menyimpan informasi login (misalnya di Context API atau cookie)
-
     } catch (err) {
       console.error("Login error:", err);
       setError(err.message);

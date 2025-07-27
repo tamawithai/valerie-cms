@@ -25,6 +25,7 @@ export default function NewUser() {
   };
 
   return (
+    <ProtectedRoute>
     <>
       <Head>
         <title>Tambah Pengguna Baru - Valerie CMS</title>
@@ -225,5 +226,6 @@ export default function NewUser() {
         </main>
       </div>
     </>
+    </ProtectedRoute>
   );
 }

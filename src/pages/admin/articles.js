@@ -101,6 +101,7 @@ export default function Articles() {
   }
 
   return (
+    <ProtectedRoute>
     <>
       <Head>
         <title>Manajemen Artikel - Valerie CMS</title>
@@ -309,5 +310,6 @@ export default function Articles() {
         </main>
       </div>
     </>
+    </ProtectedRoute>
   );
 }

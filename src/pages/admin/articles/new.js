@@ -69,6 +69,7 @@ export default function NewArticle() {
   };
 
   return (
+    <ProtectedRoute>
     <>
       <Head>
         <title>Buat Artikel Baru - Valerie CMS</title>
@@ -288,5 +289,6 @@ export default function NewArticle() {
         </main>
       </div>
     </>
+    </ProtectedRoute>
   );
 }

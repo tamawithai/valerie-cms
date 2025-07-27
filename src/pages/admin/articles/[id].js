@@ -156,6 +156,7 @@ export default function EditArticle() {
   }
 
   return (
+    <ProtectedRoute>
     <>
       <Head>
         <title>Edit Artikel - Valerie CMS</title>
@@ -424,5 +425,6 @@ export default function EditArticle() {
         </main>
       </div>
     </>
+    </ProtectedRoute>
   );
 }

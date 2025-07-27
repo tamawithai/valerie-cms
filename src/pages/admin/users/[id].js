@@ -40,6 +40,7 @@ export default function EditUser() {
   };
 
   return (
+    <ProtectedRoute>
     <>
       <Head>
         <title>Edit Pengguna - Valerie CMS</title>
@@ -277,5 +278,6 @@ export default function EditUser() {
         </main>
       </div>
     </>
+    </ProtectedRoute>
   );
 }

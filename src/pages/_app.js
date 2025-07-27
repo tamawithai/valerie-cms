@@ -1,5 +1,6 @@
 import '../styles/globals.css';
 import Head from 'next/head';
+import { AuthProvider } from '../context/AuthContext'; // Import AuthProvider
 
 function MyApp({ Component, pageProps }) {
   return (
@@ -9,7 +10,10 @@ function MyApp({ Component, pageProps }) {
         <link rel="icon" href="/favicon.ico" />
         <title>Valerie CMS</title>
       </Head>
-      <Component {...pageProps} />
+      {/* Bungkus dengan AuthProvider */}
+      <AuthProvider>
+        <Component {...pageProps} />
+      </AuthProvider>
     </>
   );
 }

@@ -627,6 +627,7 @@ export default function LandingPageManager() {
   };
 
   return (
+    <ProtectedRoute>
     <>
       <Head>
         <title>Manajemen Landing Page - Valerie CMS</title>
@@ -820,5 +821,6 @@ export default function LandingPageManager() {
         </main>
       </div>
     </>
+    </ProtectedRoute>
   );
 }

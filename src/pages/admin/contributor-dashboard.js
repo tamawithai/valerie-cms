@@ -19,6 +19,7 @@ export default function ContributorDashboard() {
   ];
 
   return (
+    <ProtectedRoute>
     <>
       <Head>
         <title>Dashboard Contributor - Valerie CMS</title>
@@ -195,5 +196,6 @@ export default function ContributorDashboard() {
         </main>
       </div>
     </>
+    </ProtectedRoute>
   );
 }

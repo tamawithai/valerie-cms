@@ -137,6 +137,7 @@ export default function UserManagement() {
   }
 
   return (
+    <ProtectedRoute>
     <>
       <Head>
         <title>Manajemen Pengguna - Valerie CMS</title>
@@ -447,5 +448,6 @@ export default function UserManagement() {
         </main>
       </div>
     </>
+    </ProtectedRoute>
   );
 }

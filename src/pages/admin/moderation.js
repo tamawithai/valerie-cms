@@ -67,6 +67,7 @@ export default function ArticleModeration() {
 // ... (bagian atas file: import, fungsi, state, dll) ...
 
 return (
+  <ProtectedRoute>
   <RoleGuard allowedRoles={['Admin']}> {/* RoleGuard dimulai di sini */}
     <>
       <Head>
@@ -345,5 +346,6 @@ return (
       </div>
     </>
   </RoleGuard>
-)
+</ProtectedRoute>
+);
 }
