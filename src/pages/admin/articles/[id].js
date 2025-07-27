@@ -1,38 +1,45 @@
+// src/pages/admin/articles/[id].js
 import Head from 'next/head';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 
 export default function EditArticle() {
   const router = useRouter();
   const { id } = router.query;
 
-  // Data dummy untuk artikel (nanti akan diambil dari database)
-  const [article, setArticle] = useState({
-    id: id || 1,
-    title: 'Tips Memulai Usaha Kecil yang Sukses',
-    excerpt: 'Panduan lengkap untuk memulai usaha kecil dengan modal minimal dan strategi yang tepat',
-    content: `Memulai usaha kecil memang membutuhkan perencanaan yang matang. Berikut beberapa tips yang bisa Anda terapkan:
+  const [article, setArticle] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
-1. Identifikasi Peluang Pasar
-Cari tahu kebutuhan masyarakat di sekitar Anda. Peluang bisnis seringkali ada di halal-hal sederhana yang sering diabaikan.
+  // Fetch data artikel berdasarkan ID saat komponen dimuat atau ID berubah
+  useEffect(() => {
+    if (id) {
+      fetchArticle();
+    }
+  }, [id]);
 
-2. Rencana Bisnis yang Jelas
-Buat rencana bisnis sederhana yang mencakup target pasar, strategi pemasaran, dan proyeksi keuangan.
-
-3. Mulai dengan Modal Kecil
-Jangan terlalu memaksakan diri dengan modal besar. Mulailah dengan skala kecil dan tingkatkan secara bertahap.
-
-4. Manfaatkan Teknologi
-Gunakan media sosial dan platform digital untuk mempromosikan produk Anda. Valerie CMS bisa membantu Anda mengelola konten digital dengan mudah.
-
-Dengan konsistensi dan kerja keras, usaha kecil Anda bisa berkembang menjadi besar. Semangat terus!`,
-    category: 'Bisnis',
-    status: 'Published',
-    tags: 'tips, bisnis, ukm',
-    author: 'Admin Valerie',
-    date: '2025-05-15'
-  });
+  async function fetchArticle() {
+    try {
+      setLoading(true);
+      setError(null);
+      const response = await fetch(`/api/articles/${id}`);
+      if (!response.ok) {
+        if (response.status === 404) {
+          throw new Error('Artikel tidak ditemukan');
+        }
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+      const data = await response.json();
+      setArticle(data);
+    } catch (err) {
+      console.error("Failed to fetch article:", err);
+      setError(err.message);
+    } finally {
+      setLoading(false);
+    }
+  }
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -42,18 +49,111 @@ Dengan konsistensi dan kerja keras, usaha kecil Anda bisa berkembang menjadi bes
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    alert('Perubahan artikel akan disimpan (simulasi). Nanti akan terhubung ke Firebase.');
-    // Di sini nanti akan kita hubungkan ke Firebase
-  };
+    if (!article) return;
 
-  const handleDelete = () => {
-    if (confirm('Apakah Anda yakin ingin menghapus artikel ini? Tindakan ini tidak dapat dibatalkan.')) {
-      alert('Artikel akan dihapus (simulasi).');
-      router.push('/admin/articles');
+    setIsSubmitting(true);
+    try {
+      const response = await fetch(`/api/articles/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          title: article.title,
+          excerpt: article.excerpt,
+          content: article.content,
+          // categoryId: article.categoryId, // Jika ada
+          tags: article.tags,
+          status: article.status,
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Gagal memperbarui artikel');
+      }
+
+      const updatedArticle = await response.json();
+      setArticle(updatedArticle);
+      alert('Artikel berhasil diperbarui!');
+      // Opsional: Redirect ke daftar artikel
+      // router.push('/admin/articles');
+    } catch (error) {
+      console.error("Error updating article:", error);
+      alert('Gagal memperbarui artikel: ' + error.message);
+    } finally {
+      setIsSubmitting(false);
     }
   };
+
+  const handleDelete = async () => {
+    if (confirm('Apakah Anda yakin ingin menghapus artikel ini? Tindakan ini tidak dapat dibatalkan.')) {
+      try {
+        const response = await fetch(`/api/articles/${id}`, {
+          method: 'DELETE',
+        });
+
+        if (!response.ok) {
+          throw new Error('Gagal menghapus artikel');
+        }
+
+        alert('Artikel berhasil dihapus.');
+        router.push('/admin/articles');
+      } catch (error) {
+        console.error("Error deleting article:", error);
+        alert('Gagal menghapus artikel: ' + error.message);
+      }
+    }
+  };
+
+  // Tampilkan loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Memuat artikel...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Tampilkan error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
+          <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+            <svg className="h-6 w-6 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <h3 className="mt-4 text-lg font-medium text-gray-900">Error</h3>
+          <p className="mt-2 text-sm text-gray-500">{error}</p>
+          <div className="mt-6">
+            <button
+              onClick={() => router.push('/admin/articles')}
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+            >
+              Kembali ke Daftar Artikel
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Jika data artikel sudah dimuat
+  if (!article) {
+      return (
+        <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+          <div className="text-center">
+            <p className="mt-4 text-gray-600">Artikel tidak tersedia.</p>
+          </div>
+        </div>
+      );
+  }
 
   return (
     <>
@@ -64,7 +164,8 @@ Dengan konsistensi dan kerja keras, usaha kecil Anda bisa berkembang menjadi bes
       <div className="min-h-screen bg-gray-50">
         {/* Navbar - sama seperti sebelumnya */}
         <nav className="bg-white shadow-sm">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* ... (kode navbar sama seperti file sebelumnya) ... */}
+           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between h-16">
               <div className="flex">
                 <div className="flex-shrink-0 flex items-center">
@@ -76,6 +177,9 @@ Dengan konsistensi dan kerja keras, usaha kecil Anda bisa berkembang menjadi bes
                   </Link>
                   <Link href="/admin/articles" className="border-primary-500 text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                     Artikel
+                  </Link>
+                  <Link href="/admin/moderation" className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                    Moderasi
                   </Link>
                   <Link href="/admin/landing" className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                     Landing Page
@@ -146,32 +250,11 @@ Dengan konsistensi dan kerja keras, usaha kecil Anda bisa berkembang menjadi bes
                       type="text"
                       name="title"
                       id="title"
-                      value={article.title}
+                      value={article.title || ''}
                       onChange={handleChange}
                       required
                       className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
                     />
-                  </div>
-
-                  {/* Kategori */}
-                  <div>
-                    <label htmlFor="category" className="block text-sm font-medium text-gray-700">
-                      Kategori
-                    </label>
-                    <select
-                      id="category"
-                      name="category"
-                      value={article.category}
-                      onChange={handleChange}
-                      className="mt-1 block w-full bg-white border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                    >
-                      <option value="">Pilih kategori</option>
-                      <option value="Bisnis">Bisnis</option>
-                      <option value="Marketing">Marketing</option>
-                      <option value="Keuangan">Keuangan</option>
-                      <option value="Teknologi">Teknologi</option>
-                      <option value="Tips">Tips</option>
-                    </select>
                   </div>
 
                   {/* Excerpt */}
@@ -183,7 +266,7 @@ Dengan konsistensi dan kerja keras, usaha kecil Anda bisa berkembang menjadi bes
                       id="excerpt"
                       name="excerpt"
                       rows={3}
-                      value={article.excerpt}
+                      value={article.excerpt || ''}
                       onChange={handleChange}
                       className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
                       placeholder="Ringkasan singkat tentang artikel ini..."
@@ -199,7 +282,7 @@ Dengan konsistensi dan kerja keras, usaha kecil Anda bisa berkembang menjadi bes
                       id="content"
                       name="content"
                       rows={15}
-                      value={article.content}
+                      value={article.content || ''}
                       onChange={handleChange}
                       required
                       className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm font-mono"
@@ -216,7 +299,7 @@ Dengan konsistensi dan kerja keras, usaha kecil Anda bisa berkembang menjadi bes
                       type="text"
                       name="tags"
                       id="tags"
-                      value={article.tags}
+                      value={article.tags || ''}
                       onChange={handleChange}
                       className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
                       placeholder="tips, bisnis, ukm"
@@ -279,16 +362,16 @@ Dengan konsistensi dan kerja keras, usaha kecil Anda bisa berkembang menjadi bes
                         <span className="font-medium">ID:</span> {article.id}
                       </div>
                       <div>
-                        <span className="font-medium">Penulis:</span> {article.author}
+                        <span className="font-medium">Penulis:</span> {article.author?.name || 'Unknown'}
                       </div>
                       <div>
-                        <span className="font-medium">Tanggal Dibuat:</span> {article.date}
+                        <span className="font-medium">Tanggal Dibuat:</span> {new Date(article.createdAt).toLocaleDateString('id-ID')}
                       </div>
                       <div>
-                        <span className="font-medium">Status Saat Ini:</span> 
+                        <span className="font-medium">Status Saat Ini:</span>
                         <span className={`ml-2 px-2 inline-flex text-xs leading-5 font-semibold rounded-full 
-                          ${article.status === 'Published' ? 'bg-green-100 text-green-800' : 
-                            article.status === 'Draft' ? 'bg-yellow-100 text-yellow-800' : 
+                          ${article.status === 'Published' ? 'bg-green-100 text-green-800' :
+                            article.status === 'Draft' ? 'bg-yellow-100 text-yellow-800' :
                             'bg-red-100 text-red-800'}`}>
                           {article.status}
                         </span>
@@ -310,7 +393,7 @@ Dengan konsistensi dan kerja keras, usaha kecil Anda bisa berkembang menjadi bes
                     </svg>
                     Hapus Artikel
                   </button>
-                  
+
                   <div className="flex space-x-3">
                     <Link
                       href="/admin/articles"
@@ -320,9 +403,18 @@ Dengan konsistensi dan kerja keras, usaha kecil Anda bisa berkembang menjadi bes
                     </Link>
                     <button
                       type="submit"
-                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                      disabled={isSubmitting}
+                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
                     >
-                      Simpan Perubahan
+                      {isSubmitting ? (
+                        <>
+                          <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                            <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                            <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                          </svg>
+                          Menyimpan...
+                        </>
+                      ) : 'Simpan Perubahan'}
                     </button>
                   </div>
                 </div>

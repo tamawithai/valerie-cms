@@ -1,18 +1,25 @@
+// src/pages/admin/articles/new.js
 import Head from 'next/head';
 import Link from 'next/link';
 import { useState } from 'react';
-import { useRouter } from 'next/router';
+import { useRouter } from 'next/router'; // Tambahkan ini untuk redirect
 
 export default function NewArticle() {
-  const router = useRouter();
+  const router = useRouter(); // Inisialisasi router
   const [article, setArticle] = useState({
     title: '',
     excerpt: '',
     content: '',
-    category: '',
+    // categoryId: '', // Jika ada kategori
+    tags: '',
     status: 'Draft',
-    tags: ''
+    // authorId HARUS diambil dari session/login user saat ini
+    // Untuk sementara, kita bisa hardcode atau ambil dari login dummy
+    // Di implementasi nyata, ini akan didapat dari context/auth
+    authorId: 1, // Ganti dengan ID user yang sedang login
   });
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -22,10 +29,43 @@ export default function NewArticle() {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    alert('Artikel akan disimpan (simulasi). Nanti akan terhubung ke Firebase.');
-    // Di sini nanti akan kita hubungkan ke Firebase
+    setIsSubmitting(true);
+    setSubmitError(null);
+
+    try {
+      // Validasi dasar
+      if (!article.title.trim() || !article.content.trim() || !article.authorId) {
+        throw new Error('Title, content, and author are required.');
+      }
+
+      const response = await fetch('/api/articles', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(article),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.message || 'Failed to create article');
+      }
+
+      const newArticle = await response.json();
+      alert('Artikel berhasil dibuat!');
+      // Redirect ke halaman edit artikel yang baru dibuat, atau ke daftar artikel
+      router.push(`/admin/articles/${newArticle.id}`);
+      // Atau jika ingin ke daftar: router.push('/admin/articles');
+
+    } catch (error) {
+      console.error("Error creating article:", error);
+      setSubmitError(error.message);
+      alert('Gagal membuat artikel: ' + error.message);
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
@@ -50,6 +90,9 @@ export default function NewArticle() {
                   <Link href="/admin/articles" className="border-primary-500 text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                     Artikel
                   </Link>
+                                   <Link href="/admin/moderation" className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                                       Moderasi
+                                   </Link>
                   <Link href="/admin/landing" className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                     Landing Page
                   </Link>
@@ -92,6 +135,24 @@ export default function NewArticle() {
               </div>
             </div>
 
+            {/* Error Message */}
+            {submitError && (
+              <div className="mb-6 bg-red-50 border-l-4 border-red-400 p-4">
+                <div className="flex">
+                  <div className="flex-shrink-0">
+                    <svg className="h-5 w-5 text-red-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+                      <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clipRule="evenodd" />
+                    </svg>
+                  </div>
+                  <div className="ml-3">
+                    <p className="text-sm text-red-700">
+                      {submitError}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
             <form onSubmit={handleSubmit} className="bg-white shadow sm:rounded-lg">
               <div className="px-4 py-5 sm:p-6">
                 <div className="space-y-6">
@@ -109,27 +170,6 @@ export default function NewArticle() {
                       required
                       className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
                     />
-                  </div>
-
-                  {/* Kategori */}
-                  <div>
-                    <label htmlFor="category" className="block text-sm font-medium text-gray-700">
-                      Kategori
-                    </label>
-                    <select
-                      id="category"
-                      name="category"
-                      value={article.category}
-                      onChange={handleChange}
-                      className="mt-1 block w-full bg-white border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
-                    >
-                      <option value="">Pilih kategori</option>
-                      <option value="Bisnis">Bisnis</option>
-                      <option value="Marketing">Marketing</option>
-                      <option value="Keuangan">Keuangan</option>
-                      <option value="Teknologi">Teknologi</option>
-                      <option value="Tips">Tips</option>
-                    </select>
                   </div>
 
                   {/* Excerpt */}
@@ -228,9 +268,18 @@ export default function NewArticle() {
                   </Link>
                   <button
                     type="submit"
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                    disabled={isSubmitting}
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
                   >
-                    Simpan Artikel
+                    {isSubmitting ? (
+                      <>
+                        <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
+                          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                        </svg>
+                        Menyimpan...
+                      </>
+                    ) : 'Simpan Artikel'}
                   </button>
                 </div>
               </div>
