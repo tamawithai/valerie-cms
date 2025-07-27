@@ -5,7 +5,7 @@ export default function Navbar() {
     <nav className="bg-white shadow-sm">
       <div className="container flex items-center justify-between h-16">
         <Link href="/" className="text-xl font-bold text-primary-600">
-          Valerie CMS
+          VALERIE
         </Link>
         
         <div className="hidden md:flex items-center space-x-8">
