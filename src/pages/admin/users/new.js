@@ -1,9 +1,35 @@
+// src/pages/admin/users/new.js
 import Head from 'next/head';
 import Link from 'next/link';
-import { useState } from 'react';
 import ProtectedRoute from '../../components/ProtectedRoute';
+import { useState, useRef, useEffect } from 'react'; // Tambahkan useRef, useEffect
+import { useRouter } from 'next/router'; // Tambahkan useRouter
+import { useAuth } from '../../context/AuthContext'; // Tambahkan useAuth
 
 export default function NewUser() {
+  const router = useRouter(); // Inisialisasi router
+  // --- State dan Ref untuk Dropdown Menu User (Opsional) ---
+  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
+  const userMenuRef = useRef(null);
+  const { user: loggedInUser, logout } = useAuth(); // Dapatkan user dan logout dari context
+
+  // --- useEffect untuk klik di luar dropdown (Opsional) ---
+  useEffect(() => {
+    function handleClickOutside(event) {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
+        setIsUserMenuOpen(false);
+      }
+    }
+
+    if (isUserMenuOpen) {
+      document.addEventListener("mousedown", handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, [isUserMenuOpen]);
+
   const [user, setUser] = useState({
     name: '',
     email: '',
@@ -19,10 +45,38 @@ export default function NewUser() {
     }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    alert('Pengguna akan ditambahkan (simulasi). Nanti akan terhubung ke Firebase.');
-    // Di sini nanti akan kita hubungkan ke Firebase
+    // Validasi dasar sederhana
+    if (!user.name || !user.email) {
+       alert('Nama dan Email wajib diisi.');
+       return;
+    }
+
+    try {
+      const response = await fetch('/api/users', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(user),
+      });
+
+      if (!response.ok) {
+        // Tangani error dari API
+        const errorData = await response.json();
+        throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
+      }
+
+      const newUser = await response.json();
+      alert(`Pengguna ${newUser.name} berhasil ditambahkan!`);
+      // Arahkan kembali ke daftar pengguna
+      router.push('/admin/users');
+    } catch (error) {
+      console.error("Gagal menambahkan pengguna:", error);
+      alert('Gagal menambahkan pengguna: ' + error.message);
+      // Jangan arahkan keluar, biarkan user memperbaiki input jika ada error validasi
+    }
   };
 
   return (
@@ -31,9 +85,8 @@ export default function NewUser() {
       <Head>
         <title>Tambah Pengguna Baru - Valerie CMS</title>
       </Head>
-
       <div className="min-h-screen bg-gray-50">
-        {/* Navbar - sama seperti sebelumnya */}
+        {/* Navbar - diperbarui dengan dropdown user (Opsional) */}
         <nav className="bg-white shadow-sm">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between h-16">
@@ -48,6 +101,9 @@ export default function NewUser() {
                   <Link href="/admin/articles" className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                     Artikel
                   </Link>
+                  <Link href="/admin/moderation" className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"> {/* Tambahkan link Moderasi */}
+                     Moderasi
+                   </Link>
                   <Link href="/admin/landing" className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                     Landing Page
                   </Link>
@@ -57,24 +113,55 @@ export default function NewUser() {
                 </div>
               </div>
               <div className="flex items-center">
+                {/* USER PROFILE DROPDOWN - Diperbarui (Opsional) */}
                 <div className="ml-3 relative">
                   <div>
                     <button
                       type="button"
                       className="bg-white rounded-full flex text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                      id="user-menu-button"
+                      aria-expanded={isUserMenuOpen}
+                      aria-haspopup="true"
+                      onClick={() => setIsUserMenuOpen(!isUserMenuOpen)} // Toggle menu
                     >
                       <span className="sr-only">Open user menu</span>
                       <div className="h-8 w-8 rounded-full bg-primary-100 flex items-center justify-center">
-                        <span className="text-primary-800 font-medium">A</span>
+                        <span className="text-primary-800 font-medium">
+                          {loggedInUser?.name ? loggedInUser.name.charAt(0).toUpperCase() : 'U'}
+                        </span>
                       </div>
                     </button>
                   </div>
+
+                  {/* Dropdown menu */}
+                  {isUserMenuOpen && (
+                    <div
+                      ref={userMenuRef}
+                      className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50"
+                      role="menu"
+                      aria-orientation="vertical"
+                      aria-labelledby="user-menu-button"
+                      tabIndex="-1"
+                    >
+                      <div className="block px-4 py-2 text-sm text-gray-700 border-b border-gray-200">
+                        <p className="font-medium truncate">{loggedInUser?.name || 'User'}</p>
+                        <p className="truncate text-gray-500 text-xs">{loggedInUser?.email || ''}</p>
+                      </div>
+                      <button
+                        onClick={logout} // Gunakan fungsi logout dari context
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        role="menuitem"
+                        tabIndex="-1"
+                      >
+                        Keluar
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
             </div>
           </div>
         </nav>
-
         {/* Main Content */}
         <main className="py-6">
           <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -89,7 +176,6 @@ export default function NewUser() {
                 <h1 className="text-2xl font-bold text-gray-900 ml-4">Tambah Pengguna Baru</h1>
               </div>
             </div>
-
             <form onSubmit={handleSubmit} className="bg-white shadow sm:rounded-lg">
               <div className="px-4 py-5 sm:p-6">
                 <div className="space-y-6">
@@ -108,7 +194,6 @@ export default function NewUser() {
                       className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
                     />
                   </div>
-
                   {/* Email */}
                   <div>
                     <label htmlFor="email" className="block text-sm font-medium text-gray-700">
@@ -124,7 +209,6 @@ export default function NewUser() {
                       className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
                     />
                   </div>
-
                   {/* Role */}
                   <div>
                     <label htmlFor="role" className="block text-sm font-medium text-gray-700">
@@ -146,7 +230,6 @@ export default function NewUser() {
                         : 'Contributor dapat membuat dan mengelola artikel'}
                     </p>
                   </div>
-
                   {/* Status */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700">Status</label>
@@ -181,7 +264,6 @@ export default function NewUser() {
                       </div>
                     </div>
                   </div>
-
                   {/* Informasi Password */}
                   <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
                     <div className="flex">
@@ -202,7 +284,6 @@ export default function NewUser() {
                   </div>
                 </div>
               </div>
-
               <div className="px-4 py-3 bg-gray-50 text-right sm:px-6">
                 <div className="flex justify-end space-x-3">
                   <Link
