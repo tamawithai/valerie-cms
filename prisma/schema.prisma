@@ -1,0 +1,48 @@
+// prisma/schema.prisma
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        Int      @id @default(autoincrement())
+  name      String
+  email     String   @unique
+  password  String   @map("password_hash") // Kolom di DB adalah 'password_hash'
+  role      String   @default("Contributor") // 'Admin' or 'Contributor'
+  status    String   @default("Active")      // 'Active' or 'Inactive'
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+  articles  Article[]
+
+  @@map("users")
+}
+
+model Article {
+  id         Int      @id @default(autoincrement())
+  title      String
+  excerpt    String?
+  content    String
+  author     User     @relation(fields: [authorId], references: [id])
+  authorId   Int      @map("author_id")
+  category   String?
+  tags       String?  // Bisa disimpan sebagai string terpisah koma
+  status     String   @default("Draft") // 'Draft', 'Pending', 'Published'
+  publishedAt DateTime? @map("published_at")
+  createdAt  DateTime @default(now()) @map("created_at")
+  updatedAt  DateTime @updatedAt @map("updated_at")
+
+  @@map("articles")
+}
+
+model LandingPageContent {
+  id        String   @id
+  data      Json     // Menyimpan seluruh konten dalam format JSON
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  @@map("landing_page_content")
+}

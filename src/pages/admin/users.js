@@ -1,65 +1,138 @@
+// src/pages/admin/users.js
 import Head from 'next/head';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 
 export default function UserManagement() {
-  // Data dummy untuk pengguna
-  const [users, setUsers] = useState([
-    {
-      id: 1,
-      name: "Admin Valerie",
-      email: "admin@valeriecms.com",
-      role: "Admin",
-      status: "Active",
-      joinDate: "2025-01-15",
-      lastLogin: "2025-05-20 14:30"
-    },
-    {
-      id: 2,
-      name: "John Contributor",
-      email: "john@valeriecms.com",
-      role: "Contributor",
-      status: "Active",
-      joinDate: "2025-03-10",
-      lastLogin: "2025-05-19 09:15"
-    },
-    {
-      id: 3,
-      name: "Jane Contributor",
-      email: "jane@valeriecms.com",
-      role: "Contributor",
-      status: "Inactive",
-      joinDate: "2025-04-05",
-      lastLogin: "2025-05-01 16:45"
-    }
-  ]);
+  // State untuk data nyata dari API
+  const [users, setUsers] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [roleFilter, setRoleFilter] = useState('All');
   const [statusFilter, setStatusFilter] = useState('All');
 
+  // Fetch data pengguna dari API saat komponen dimuat
+  useEffect(() => {
+    async function fetchUsers() {
+      try {
+        setLoading(true);
+        setError(null);
+        const response = await fetch('/api/users');
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+        const data = await response.json();
+        setUsers(data);
+      } catch (err) {
+        console.error("Failed to fetch users:", err);
+        setError('Gagal memuat data pengguna.');
+      } finally {
+        setLoading(false);
+      }
+    }
+
+    fetchUsers();
+  }, []); // Dependency array kosong berarti hanya dijalankan sekali saat mount
+
   // Filter pengguna berdasarkan pencarian dan filter
   const filteredUsers = users.filter(user => {
-    const matchesSearch = user.name.toLowerCase().includes(searchTerm.toLowerCase()) || 
-                         user.email.toLowerCase().includes(searchTerm.toLowerCase());
+    const matchesSearch =
+      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      user.email.toLowerCase().includes(searchTerm.toLowerCase());
     const matchesRole = roleFilter === 'All' || user.role === roleFilter;
     const matchesStatus = statusFilter === 'All' || user.status === statusFilter;
     return matchesSearch && matchesRole && matchesStatus;
   });
 
-  const handleDeleteUser = (id) => {
+  const handleDeleteUser = async (id) => {
     if (confirm('Apakah Anda yakin ingin menghapus pengguna ini? Tindakan ini tidak dapat dibatalkan.')) {
-      setUsers(users.filter(user => user.id !== id));
+      try {
+        const response = await fetch(`/api/users/${id}`, {
+          method: 'DELETE',
+        });
+
+        if (!response.ok) {
+          throw new Error('Gagal menghapus pengguna');
+        }
+
+        // Update state di frontend
+        setUsers(users.filter(user => user.id !== id));
+        alert('Pengguna berhasil dihapus.');
+      } catch (error) {
+        console.error("Error deleting user:", error);
+        alert('Gagal menghapus pengguna: ' + error.message);
+      }
     }
   };
 
-  const toggleUserStatus = (id) => {
-    setUsers(users.map(user => 
-      user.id === id 
-        ? { ...user, status: user.status === 'Active' ? 'Inactive' : 'Active' }
-        : user
-    ));
+  const toggleUserStatus = async (id, currentStatus) => {
+    const newStatus = currentStatus === 'Active' ? 'Inactive' : 'Active';
+    if (confirm(`Apakah Anda yakin ingin ${newStatus === 'Active' ? 'mengaktifkan' : 'menonaktifkan'} pengguna ini?`)) {
+      try {
+        const response = await fetch(`/api/users/${id}`, {
+          method: 'PUT',
+          headers: {
+            'Content-Type': 'application/json',
+        },
+          body: JSON.stringify({ status: newStatus }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Gagal memperbarui status pengguna');
+        }
+
+        const updatedUser = await response.json();
+        
+        // Update state di frontend
+        setUsers(users.map(user => 
+          user.id === id ? { ...user, status: updatedUser.status } : user
+        ));
+        alert('Status pengguna berhasil diperbarui.');
+      } catch (error) {
+        console.error("Error updating user status:", error);
+        alert('Gagal memperbarui status pengguna: ' + error.message);
+      }
+    }
   };
+
+  // Tampilkan loading state
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
+          <p className="mt-4 text-gray-600">Memuat data pengguna...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // Tampilkan error state
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
+          <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
+            <svg className="h-6 w-6 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+          </div>
+          <h3 className="mt-4 text-lg font-medium text-gray-900">Error</h3>
+          <p className="mt-2 text-sm text-gray-500">{error}</p>
+          <div className="mt-6">
+            <button
+              onClick={() => window.location.reload()}
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+            >
+              Coba Lagi
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <>
@@ -84,8 +157,8 @@ export default function UserManagement() {
                     Artikel
                   </Link>
                   <Link href="/admin/moderation" className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                                      Moderasi
-                                  </Link>
+                    Moderasi
+                  </Link>
                   <Link href="/admin/landing" className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                     Landing Page
                   </Link>
@@ -218,9 +291,9 @@ export default function UserManagement() {
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Bergabung
                       </th>
-                      <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                      {/* <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Terakhir Login
-                      </th>
+                      </th> */}
                       <th scope="col" className="relative px-6 py-3">
                         <span className="sr-only">Actions</span>
                       </th>
@@ -262,11 +335,11 @@ export default function UserManagement() {
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {user.joinDate}
+                            {new Date(user.createdAt).toLocaleDateString('id-ID')}
                           </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {user.lastLogin}
-                          </td>
+                          {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
+                            {user.lastLogin ? new Date(user.lastLogin).toLocaleString('id-ID') : '-'}
+                          </td> */}
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             <div className="flex space-x-2">
                               <Link 
@@ -276,7 +349,7 @@ export default function UserManagement() {
                                 Edit
                               </Link>
                               <button
-                                onClick={() => toggleUserStatus(user.id)}
+                                onClick={() => toggleUserStatus(user.id, user.status)}
                                 className={`${user.status === 'Active' 
                                   ? 'text-yellow-600 hover:text-yellow-900' 
                                   : 'text-green-600 hover:text-green-900'}`}
