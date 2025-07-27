@@ -1,19 +1,17 @@
 // src/pages/admin/users/new.js
 import Head from 'next/head';
 import Link from 'next/link';
-import { useState, useRef, useEffect } from 'react'; // Tambahkan useRef, useEffect
-import { useRouter } from 'next/router'; // Tambahkan useRouter
-import ProtectedRoute from '../../components/ProtectedRoute'; // Pastikan path ini benar
-import { useAuth } from '../../context/AuthContext'; // Tambahkan useAuth
+import { useState, useRef, useEffect } from 'react';
+import { useRouter } from 'next/router';
+import ProtectedRoute from '../../../components/ProtectedRoute'; // Path sudah diperbaiki
+import { useAuth } from '../../../context/AuthContext';
 
 export default function NewUser() {
-  const router = useRouter(); // Inisialisasi router
-  // --- State dan Ref untuk Dropdown Menu User (Opsional) ---
+  const router = useRouter();
   const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
   const userMenuRef = useRef(null);
-  const { user: loggedInUser, logout } = useAuth(); // Dapatkan user dan logout dari context
+  const { user: loggedInUser, logout } = useAuth();
 
-  // --- useEffect untuk klik di luar dropdown (Opsional) ---
   useEffect(() => {
     function handleClickOutside(event) {
       if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
@@ -30,9 +28,11 @@ export default function NewUser() {
     };
   }, [isUserMenuOpen]);
 
+  // State untuk user baru, sekarang dengan password
   const [user, setUser] = useState({
     name: '',
     email: '',
+    password: '', // Ditambahkan untuk input password
     role: 'Contributor',
     status: 'Active'
   });
@@ -47,10 +47,13 @@ export default function NewUser() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    // Validasi dasar sederhana
-    if (!user.name || !user.email) {
-       alert('Nama dan Email wajib diisi.');
+    if (!user.name || !user.email || !user.password) {
+       alert('Nama, Email, dan Password wajib diisi.');
        return;
+    }
+    if (user.password.length < 8) {
+        alert('Password minimal harus 8 karakter.');
+        return;
     }
 
     try {
@@ -63,19 +66,16 @@ export default function NewUser() {
       });
 
       if (!response.ok) {
-        // Tangani error dari API
         const errorData = await response.json();
         throw new Error(errorData.message || `HTTP error! status: ${response.status}`);
       }
 
       const newUser = await response.json();
       alert(`Pengguna ${newUser.name} berhasil ditambahkan!`);
-      // Arahkan kembali ke daftar pengguna
       router.push('/admin/users');
     } catch (error) {
       console.error("Gagal menambahkan pengguna:", error);
       alert('Gagal menambahkan pengguna: ' + error.message);
-      // Jangan arahkan keluar, biarkan user memperbaiki input jika ada error validasi
     }
   };
 
@@ -86,7 +86,7 @@ export default function NewUser() {
         <title>Tambah Pengguna Baru - Valerie CMS</title>
       </Head>
       <div className="min-h-screen bg-gray-50">
-        {/* Navbar - diperbarui dengan dropdown user (Opsional) */}
+        {/* Navbar */}
         <nav className="bg-white shadow-sm">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between h-16">
@@ -101,7 +101,7 @@ export default function NewUser() {
                   <Link href="/admin/articles" className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                     Artikel
                   </Link>
-                  <Link href="/admin/moderation" className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium"> {/* Tambahkan link Moderasi */}
+                  <Link href="/admin/moderation" className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                      Moderasi
                    </Link>
                   <Link href="/admin/landing" className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
@@ -113,7 +113,6 @@ export default function NewUser() {
                 </div>
               </div>
               <div className="flex items-center">
-                {/* USER PROFILE DROPDOWN - Diperbarui (Opsional) */}
                 <div className="ml-3 relative">
                   <div>
                     <button
@@ -122,7 +121,7 @@ export default function NewUser() {
                       id="user-menu-button"
                       aria-expanded={isUserMenuOpen}
                       aria-haspopup="true"
-                      onClick={() => setIsUserMenuOpen(!isUserMenuOpen)} // Toggle menu
+                      onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
                     >
                       <span className="sr-only">Open user menu</span>
                       <div className="h-8 w-8 rounded-full bg-primary-100 flex items-center justify-center">
@@ -132,8 +131,6 @@ export default function NewUser() {
                       </div>
                     </button>
                   </div>
-
-                  {/* Dropdown menu */}
                   {isUserMenuOpen && (
                     <div
                       ref={userMenuRef}
@@ -148,7 +145,7 @@ export default function NewUser() {
                         <p className="truncate text-gray-500 text-xs">{loggedInUser?.email || ''}</p>
                       </div>
                       <button
-                        onClick={logout} // Gunakan fungsi logout dari context
+                        onClick={logout}
                         className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
                         role="menuitem"
                         tabIndex="-1"
@@ -209,6 +206,25 @@ export default function NewUser() {
                       className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
                     />
                   </div>
+                  {/* Password (BARU) */}
+                  <div>
+                    <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                      Password
+                    </label>
+                    <input
+                      type="password"
+                      name="password"
+                      id="password"
+                      value={user.password}
+                      onChange={handleChange}
+                      required
+                      minLength="8"
+                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                    />
+                    <p className="mt-2 text-sm text-gray-500">
+                      Minimal 8 karakter.
+                    </p>
+                  </div>
                   {/* Role */}
                   <div>
                     <label htmlFor="role" className="block text-sm font-medium text-gray-700">
@@ -261,24 +277,6 @@ export default function NewUser() {
                         <label htmlFor="inactive" className="ml-3 block text-sm font-medium text-gray-700">
                           Inactive
                         </label>
-                      </div>
-                    </div>
-                  </div>
-                  {/* Informasi Password */}
-                  <div className="bg-blue-50 border border-blue-200 rounded-md p-4">
-                    <div className="flex">
-                      <div className="flex-shrink-0">
-                        <svg className="h-5 w-5 text-blue-400" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                          <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 102 0v-3a1 1 0 10-2 0zm0 8a1 1 0 100-2 1 1 0 000 2z" clipRule="evenodd" />
-                        </svg>
-                      </div>
-                      <div className="ml-3">
-                        <h3 className="text-sm font-medium text-blue-800">Informasi Password</h3>
-                        <div className="mt-2 text-sm text-blue-700">
-                          <p>
-                            Password akan dibuat secara otomatis dan dikirim ke email pengguna.
-                          </p>
-                        </div>
                       </div>
                     </div>
                   </div>

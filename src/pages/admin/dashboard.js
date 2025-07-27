@@ -2,8 +2,8 @@
 import Head from 'next/head';
 import Link from 'next/link';
 import { useState, useRef, useEffect } from 'react'; // Tambahkan useRef dan useEffect
-import ProtectedRoute from '../../components/ProtectedRoute'; // Pastikan ini diimpor
-import { useAuth } from '../../context/AuthContext'; // Impor useAuth
+import ProtectedRoute from '../../components/ProtectedRoute'; // Pastikan path ini benar
+import { useAuth } from '../../context/AuthContext'; // Tambahkan useAuth
 
 export default function AdminDashboard() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
