@@ -1,21 +1,50 @@
+// src/pages/admin/login.js
 import Head from 'next/head';
 import Link from 'next/link';
 import { useState } from 'react';
+import { useRouter } from 'next/router'; // Untuk redirect setelah login
 
 export default function AdminLogin() {
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [rememberMe, setRememberMe] = useState(false);
+  const [error, setError] = useState(null); // State untuk error
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    // Simulasi login - akan kita hubungkan ke Firebase nanti
-    setTimeout(() => {
+    setError(null);
+
+    try {
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ email, password }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || 'Login failed');
+      }
+
+      // Jika login berhasil
+      alert('Login berhasil!');
+      // Redirect ke dashboard
+      router.push('/admin/dashboard');
+      // CATATAN: Untuk implementasi penuh, server harus mengatur cookie session
+      // dan client harus menyimpan informasi login (misalnya di Context API atau cookie)
+
+    } catch (err) {
+      console.error("Login error:", err);
+      setError(err.message);
+    } finally {
       setLoading(false);
-      alert('Fitur login akan dihubungkan ke Firebase');
-    }, 1000);
+    }
   };
 
   return (
@@ -44,6 +73,14 @@ export default function AdminLogin() {
 
         <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
           <div className="bg-white py-8 px-4 shadow sm:rounded-lg sm:px-10">
+            {/* Error Message */}
+            {error && (
+              <div className="mb-4 bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded relative" role="alert">
+                <strong className="font-bold">Error: </strong>
+                <span className="block sm:inline">{error}</span>
+              </div>
+            )}
+
             <form className="space-y-6" onSubmit={handleSubmit}>
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700">
@@ -135,7 +172,7 @@ export default function AdminLogin() {
               </div>
             </div>
           </div>
-          
+
           <div className="mt-6 text-center">
             <Link href="/" className="text-sm font-medium text-primary-600 hover:text-primary-500">
               ← Kembali ke beranda

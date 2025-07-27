@@ -39,8 +39,8 @@ export default function UserManagement() {
   // Filter pengguna berdasarkan pencarian dan filter
   const filteredUsers = users.filter(user => {
     const matchesSearch =
-      user.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      user.email.toLowerCase().includes(searchTerm.toLowerCase());
+      (user.name && user.name.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (user.email && user.email.toLowerCase().includes(searchTerm.toLowerCase()));
     const matchesRole = roleFilter === 'All' || user.role === roleFilter;
     const matchesStatus = statusFilter === 'All' || user.status === statusFilter;
     return matchesSearch && matchesRole && matchesStatus;
@@ -54,7 +54,8 @@ export default function UserManagement() {
         });
 
         if (!response.ok) {
-          throw new Error('Gagal menghapus pengguna');
+          const errorData = await response.json();
+          throw new Error(errorData.message || 'Gagal menghapus pengguna');
         }
 
         // Update state di frontend
@@ -80,13 +81,14 @@ export default function UserManagement() {
         });
 
         if (!response.ok) {
-          throw new Error('Gagal memperbarui status pengguna');
+            const errorData = await response.json();
+            throw new Error(errorData.message || 'Gagal memperbarui status pengguna');
         }
 
         const updatedUser = await response.json();
-        
+
         // Update state di frontend
-        setUsers(users.map(user => 
+        setUsers(users.map(user =>
           user.id === id ? { ...user, status: updatedUser.status } : user
         ));
         alert('Status pengguna berhasil diperbarui.');
@@ -187,7 +189,10 @@ export default function UserManagement() {
                     >
                       <span className="sr-only">Open user menu</span>
                       <div className="h-8 w-8 rounded-full bg-primary-100 flex items-center justify-center">
-                        <span className="text-primary-800 font-medium">A</span>
+                        <span className="text-primary-800 font-medium">
+                            {/* Di sini nanti akan ditampilkan inisial user yang login */}
+                            U
+                        </span>
                       </div>
                     </button>
                   </div>
@@ -225,7 +230,7 @@ export default function UserManagement() {
                     className="w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-primary-500 focus:border-primary-500"
                   />
                 </div>
-                
+
                 <div>
                   <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
                     Role
@@ -241,7 +246,7 @@ export default function UserManagement() {
                     <option value="Contributor">Contributor</option>
                   </select>
                 </div>
-                
+
                 <div>
                   <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-1">
                     Status
@@ -257,7 +262,7 @@ export default function UserManagement() {
                     <option value="Inactive">Inactive</option>
                   </select>
                 </div>
-                
+
                 <div className="flex items-end">
                   <button
                     onClick={() => {
@@ -291,9 +296,6 @@ export default function UserManagement() {
                       <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                         Bergabung
                       </th>
-                      {/* <th scope="col" className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Terakhir Login
-                      </th> */}
                       <th scope="col" className="relative px-6 py-3">
                         <span className="sr-only">Actions</span>
                       </th>
@@ -308,13 +310,13 @@ export default function UserManagement() {
                               <div className="flex-shrink-0 h-10 w-10">
                                 <div className="h-10 w-10 rounded-full bg-primary-100 flex items-center justify-center">
                                   <span className="text-primary-800 font-medium">
-                                    {user.name.charAt(0)}
+                                    {user.name ? user.name.charAt(0).toUpperCase() : 'U'}
                                   </span>
                                 </div>
                               </div>
                               <div className="ml-4">
-                                <div className="text-sm font-medium text-gray-900">{user.name}</div>
-                                <div className="text-sm text-gray-500">{user.email}</div>
+                                <div className="text-sm font-medium text-gray-900">{user.name || 'Nama Tidak Diketahui'}</div>
+                                <div className="text-sm text-gray-500">{user.email || '-'}</div>
                               </div>
                             </div>
                           </td>
@@ -335,11 +337,8 @@ export default function UserManagement() {
                             </span>
                           </td>
                           <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {new Date(user.createdAt).toLocaleDateString('id-ID')}
+                            {user.createdAt ? new Date(user.createdAt).toLocaleDateString('id-ID') : '-'}
                           </td>
-                          {/* <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {user.lastLogin ? new Date(user.lastLogin).toLocaleString('id-ID') : '-'}
-                          </td> */}
                           <td className="px-6 py-4 whitespace-nowrap text-right text-sm font-medium">
                             <div className="flex space-x-2">
                               <Link 
@@ -368,7 +367,7 @@ export default function UserManagement() {
                       ))
                     ) : (
                       <tr>
-                        <td colSpan="6" className="px-6 py-4 text-center text-sm text-gray-500">
+                        <td colSpan="5" className="px-6 py-4 text-center text-sm text-gray-500">
                           Tidak ada pengguna yang ditemukan
                         </td>
                       </tr>
