@@ -25,7 +25,7 @@ export default function Navbar() {
         
         <div>
           <Link href="/admin/login" className="btn btn-primary">
-            Masuk Admin
+            Masuk
           </Link>
         </div>
       </div>
