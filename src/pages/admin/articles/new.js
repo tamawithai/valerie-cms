@@ -1,26 +1,41 @@
 // src/pages/admin/articles/new.js
 import Head from 'next/head';
 import Link from 'next/link';
-import { useState } from 'react';
-import { useRouter } from 'next/router'; // Tambahkan ini untuk redirect
-import ProtectedRoute from '../../components/ProtectedRoute'; // Pastikan path ini benar
+import { useState, useEffect } from 'react';
+import { useRouter } from 'next/router';
+import ProtectedRoute from '../../../components/ProtectedRoute';
 
 export default function NewArticle() {
-  const router = useRouter(); // Inisialisasi router
+  const router = useRouter();
+  const [categories, setCategories] = useState([]);
   const [article, setArticle] = useState({
     title: '',
     excerpt: '',
     content: '',
-    // categoryId: '', // Jika ada kategori
+    categoryId: '',
     tags: '',
     status: 'Draft',
-    // authorId HARUS diambil dari session/login user saat ini
-    // Untuk sementara, kita bisa hardcode atau ambil dari login dummy
-    // Di implementasi nyata, ini akan didapat dari context/auth
-    authorId: 1, // Ganti dengan ID user yang sedang login
+    authorId: 1,
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
+
+  useEffect(() => {
+    async function fetchCategories() {
+      try {
+        const response = await fetch('/api/categories');
+        if (!response.ok) {
+          throw new Error('Gagal memuat kategori');
+        }
+        const data = await response.json();
+        setCategories(data);
+      } catch (error) {
+        console.error("Error fetching categories:", error);
+        setSubmitError('Tidak dapat memuat daftar kategori. Pastikan API kategori sudah ada.');
+      }
+    }
+    fetchCategories();
+  }, []);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -36,17 +51,32 @@ export default function NewArticle() {
     setSubmitError(null);
 
     try {
-      // Validasi dasar
-      if (!article.title.trim() || !article.content.trim() || !article.authorId) {
-        throw new Error('Title, content, and author are required.');
+      if (!article.title.trim() || !article.content.trim() || !article.categoryId) {
+        throw new Error('Judul, konten, dan kategori wajib diisi.');
       }
+
+      const { categoryId, authorId, ...restOfArticle } = article;
+      
+      const payload = {
+        ...restOfArticle,
+        category: {
+          connect: {
+            id: parseInt(categoryId, 10),
+          },
+        },
+        author: {
+          connect: {
+            id: authorId,
+          }
+        }
+      };
 
       const response = await fetch('/api/articles', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify(article),
+        body: JSON.stringify(payload),
       });
 
       if (!response.ok) {
@@ -56,14 +86,11 @@ export default function NewArticle() {
 
       const newArticle = await response.json();
       alert('Artikel berhasil dibuat!');
-      // Redirect ke halaman edit artikel yang baru dibuat, atau ke daftar artikel
       router.push(`/admin/articles/${newArticle.id}`);
-      // Atau jika ingin ke daftar: router.push('/admin/articles');
 
     } catch (error) {
       console.error("Error creating article:", error);
       setSubmitError(error.message);
-      alert('Gagal membuat artikel: ' + error.message);
     } finally {
       setIsSubmitting(false);
     }
@@ -77,7 +104,6 @@ export default function NewArticle() {
       </Head>
 
       <div className="min-h-screen bg-gray-50">
-        {/* Navbar - sama seperti sebelumnya */}
         <nav className="bg-white shadow-sm">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between h-16">
@@ -92,9 +118,9 @@ export default function NewArticle() {
                   <Link href="/admin/articles" className="border-primary-500 text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                     Artikel
                   </Link>
-                                   <Link href="/admin/moderation" className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                                       Moderasi
-                                   </Link>
+                  <Link href="/admin/moderation" className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
+                    Moderasi
+                  </Link>
                   <Link href="/admin/landing" className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
                     Landing Page
                   </Link>
@@ -122,7 +148,6 @@ export default function NewArticle() {
           </div>
         </nav>
 
-        {/* Main Content */}
         <main className="py-6">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="mb-6">
@@ -137,7 +162,6 @@ export default function NewArticle() {
               </div>
             </div>
 
-            {/* Error Message */}
             {submitError && (
               <div className="mb-6 bg-red-50 border-l-4 border-red-400 p-4">
                 <div className="flex">
@@ -158,7 +182,6 @@ export default function NewArticle() {
             <form onSubmit={handleSubmit} className="bg-white shadow sm:rounded-lg">
               <div className="px-4 py-5 sm:p-6">
                 <div className="space-y-6">
-                  {/* Judul */}
                   <div>
                     <label htmlFor="title" className="block text-sm font-medium text-gray-700">
                       Judul Artikel
@@ -174,7 +197,6 @@ export default function NewArticle() {
                     />
                   </div>
 
-                  {/* Excerpt */}
                   <div>
                     <label htmlFor="excerpt" className="block text-sm font-medium text-gray-700">
                       Ringkasan (Excerpt)
@@ -190,7 +212,6 @@ export default function NewArticle() {
                     />
                   </div>
 
-                  {/* Konten */}
                   <div>
                     <label htmlFor="content" className="block text-sm font-medium text-gray-700">
                       Konten Artikel
@@ -207,7 +228,6 @@ export default function NewArticle() {
                     />
                   </div>
 
-                  {/* Tags */}
                   <div>
                     <label htmlFor="tags" className="block text-sm font-medium text-gray-700">
                       Tags (pisahkan dengan koma)
@@ -222,8 +242,28 @@ export default function NewArticle() {
                       placeholder="tips, bisnis, ukm"
                     />
                   </div>
+                  
+                  <div>
+                    <label htmlFor="category" className="block text-sm font-medium text-gray-700">
+                      Kategori
+                    </label>
+                    <select
+                      id="category"
+                      name="categoryId"
+                      value={article.categoryId}
+                      onChange={handleChange}
+                      required
+                      className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
+                    >
+                      <option value="" disabled>Pilih Kategori</option>
+                      {categories.map((category) => (
+                        <option key={category.id} value={category.id}>
+                          {category.name}
+                        </option>
+                      ))}
+                    </select>
+                  </div>
 
-                  {/* Status */}
                   <div>
                     <label className="block text-sm font-medium text-gray-700">Status</label>
                     <div className="mt-2 space-y-2">

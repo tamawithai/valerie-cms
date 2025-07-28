@@ -3,7 +3,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
-import ProtectedRoute from '../../components/ProtectedRoute'; // Pastikan path ini benar
+import ProtectedRoute from '../../../components/ProtectedRoute'; // Pastikan path ini benar
 
 export default function EditArticle() {
   const router = useRouter();
