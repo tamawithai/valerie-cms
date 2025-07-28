@@ -1,98 +1,79 @@
 import Head from 'next/head';
 import Link from 'next/link';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import ProtectedRoute from '../../components/ProtectedRoute'; // Pastikan path ini benar
 // KOMENTAR: Tambahkan baris ini untuk mengimpor komponen layout kita.
 import AdminLayout from '../../components/AdminLayout';
 
 export default function LandingPageManager() {
   // Data dummy untuk landing page content
-  const [landingContent, setLandingContent] = useState({
-    // Hero Section
-    hero: {
-      title: "Solusi Konten Terbaik untuk UKM",
-      description: "Kelola website dan blog Anda dengan mudah tanpa perlu coding.",
-      buttonText: "Lihat Fitur",
-      buttonLink: "#features",
-      backgroundImage: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"
-    },
-    
-    // Slider/Carousel
-    sliders: [
-      {
-        id: 1,
-        title: "Solusi Konten Terbaik untuk UKM",
-        description: "Kelola website dan blog Anda dengan mudah tanpa perlu coding.",
-        image: "https://images.unsplash.com/photo-1498050108023-c5249f4df085?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"
-      },
-      {
-        id: 2,
-        title: "Desain Modern & Responsif",
-        description: "Tampilan yang menarik di semua perangkat, dari desktop hingga mobile.",
-        image: "https://images.unsplash.com/photo-1551434678-e076c223a692?ixlib=rb-4.0.3&auto=format&fit=crop&w=1200&q=80"
-      }
-    ],
-    
-    // About Section
-    about: {
-      title: "Tentang Valerie CMS",
-      content: "Valerie CMS adalah solusi Content Management System yang dirancang khusus untuk membantu Usaha Kecil Menengah (UKM) mengelola konten website mereka dengan mudah dan profesional. Dengan antarmuka yang bersih dan intuitif, siapa pun dapat membuat, mengedit, dan mempublikasikan konten tanpa perlu pengetahuan teknis.",
-      image: "https://images.unsplash.com/photo-1552664730-d307ca884978?ixlib=rb-4.0.3&auto=format&fit=crop&w=800&q=80"
-    },
-    
-    // Services
-    services: [
-      {
-        id: 1,
-        title: "Pembuatan Website",
-        description: "Buat website profesional untuk UKM Anda dengan cepat dan mudah."
-      },
-      {
-        id: 2,
-        title: "Optimasi SEO",
-        description: "Pastikan website Anda mudah ditemukan di mesin pencari."
-      },
-      {
-        id: 3,
-        title: "Maintenance",
-        description: "Dapatkan dukungan teknis dan pemeliharaan berkala."
-      }
-    ],
-    
-    // Testimonials
-    testimonials: [
-      {
-        id: 1,
-        name: "Budi Santoso",
-        role: "Pemilik Toko Online",
-        content: "Valerie CMS benar-benar mengubah cara saya mengelola konten toko online saya. Sangat mudah digunakan!",
-        avatar: "https://randomuser.me/api/portraits/men/32.jpg"
-      },
-      {
-        id: 2,
-        name: "Siti Aminah",
-        role: "Marketing UKM",
-        content: "Dengan Valerie CMS, kami bisa update blog dan landing page kapan saja tanpa harus panggil programmer.",
-        avatar: "https://randomuser.me/api/portraits/women/44.jpg"
-      }
-    ],
-    
-    // Contact Info
-    contact: {
-      title: "Hubungi Kami",
-      description: "Punya pertanyaan? Kami siap membantu Anda.",
-      email: "info@valeriecms.com",
-      phone: "+62 812 3456 7890",
-      address: "Jl. Teknologi No. 123, Jakarta"
-    }
-  });
+// ================== AWAL PERUBAHAN 2 DARI 4 ==================
+// Struktur data kosong sebagai nilai awal
+const initialContent = {
+    hero: { title: "", description: "", buttonText: "", buttonLink: "", backgroundImage: "" },
+    sliders: [],
+    about: { title: "", content: "", image: "" },
+    services: [],
+    testimonials: [],
+    contact: { title: "", description: "", email: "", phone: "", address: "" }
+};
+
+const [landingContent, setLandingContent] = useState(initialContent);
+// ================== AKHIR PERUBAHAN 2 DARI 4 ==================
 
   const [activeTab, setActiveTab] = useState('hero');
 
-  const handleSave = (e) => {
-    e.preventDefault();
-    alert('Perubahan akan disimpan (simulasi). Nanti akan terhubung ke Firebase.');
+  // ================== AWAL PERUBAHAN 1 DARI 4 ==================
+const [isLoading, setIsLoading] = useState(true);
+
+// EFEK UNTUK MENGAMBIL DATA DARI DATABASE SAAT HALAMAN DIBUKA
+useEffect(() => {
+  const fetchContent = async () => {
+    try {
+      const response = await fetch('/api/landing-content');
+      if (!response.ok) {
+        throw new Error('Gagal mengambil data');
+      }
+      const data = await response.json();
+      // Pastikan data yang diterima adalah objek yang valid sebelum di-set
+      if (data && typeof data === 'object' && Object.keys(data).length > 0) {
+        setLandingContent(data);
+      }
+    } catch (error) {
+      console.error(error);
+      alert('Terjadi kesalahan saat mengambil data konten.');
+    } finally {
+      setIsLoading(false);
+    }
   };
+
+  fetchContent();
+}, []); // Array kosong berarti efek ini hanya berjalan sekali
+// ================== AKHIR PERUBAHAN 1 DARI 4 ==================
+
+  // ================== AWAL PERUBAHAN 3 DARI 4 ==================
+const handleSave = async (e) => {
+  e.preventDefault();
+  try {
+    const response = await fetch('/api/landing-content', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify(landingContent),
+    });
+
+    if (!response.ok) {
+      throw new Error('Gagal menyimpan data');
+    }
+
+    alert('Perubahan berhasil disimpan ke database!');
+  } catch (error) {
+    console.error(error);
+    alert('Terjadi kesalahan saat menyimpan perubahan.');
+  }
+};
+// ================== AKHIR PERUBAHAN 3 DARI 4 ==================
 
   // Fungsi untuk menambah slider
   const addSlider = () => {
@@ -160,6 +141,17 @@ export default function LandingPageManager() {
     });
   };
 
+// ================== TAMBAHKAN DUA FUNGSI INI ==================
+const addFeature = () => {
+    const newFeature = { id: Date.now(), icon: "💡", title: "Fitur Baru", description: "Deskripsi singkat fitur baru" };
+    setLandingContent({ ...landingContent, features: [...(landingContent.features || []), newFeature] });
+};
+
+const removeFeature = (id) => {
+    setLandingContent({ ...landingContent, features: landingContent.features.filter(feature => feature.id !== id) });
+};
+// ============================================================
+
   // Render form berdasarkan tab aktif
   const renderTabContent = () => {
     switch(activeTab) {
@@ -175,7 +167,7 @@ export default function LandingPageManager() {
                   ...landingContent,
                   hero: {...landingContent.hero, title: e.target.value}
                 })}
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-gray-800"
               />
             </div>
             
@@ -188,7 +180,7 @@ export default function LandingPageManager() {
                   ...landingContent,
                   hero: {...landingContent.hero, description: e.target.value}
                 })}
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-gray-800"
               />
             </div>
             
@@ -201,7 +193,7 @@ export default function LandingPageManager() {
                   ...landingContent,
                   hero: {...landingContent.hero, buttonText: e.target.value}
                 })}
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500  text-gray-800"
               />
             </div>
             
@@ -214,7 +206,7 @@ export default function LandingPageManager() {
                   ...landingContent,
                   hero: {...landingContent.hero, buttonLink: e.target.value}
                 })}
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500  text-gray-800"
               />
             </div>
             
@@ -227,7 +219,7 @@ export default function LandingPageManager() {
                   ...landingContent,
                   hero: {...landingContent.hero, backgroundImage: e.target.value}
                 })}
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500  text-gray-800"
               />
             </div>
           </div>
@@ -280,7 +272,7 @@ export default function LandingPageManager() {
                             sliders: newSliders
                           });
                         }}
-                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-gray-800"
                       />
                     </div>
                     
@@ -297,7 +289,7 @@ export default function LandingPageManager() {
                             sliders: newSliders
                           });
                         }}
-                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-gray-800"
                       />
                     </div>
                     
@@ -314,7 +306,7 @@ export default function LandingPageManager() {
                             sliders: newSliders
                           });
                         }}
-                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-gray-800"
                       />
                     </div>
                   </div>
@@ -336,7 +328,7 @@ export default function LandingPageManager() {
                   ...landingContent,
                   about: {...landingContent.about, title: e.target.value}
                 })}
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-gray-800"
               />
             </div>
             
@@ -349,7 +341,7 @@ export default function LandingPageManager() {
                   ...landingContent,
                   about: {...landingContent.about, content: e.target.value}
                 })}
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-gray-800"
               />
             </div>
             
@@ -362,12 +354,78 @@ export default function LandingPageManager() {
                   ...landingContent,
                   about: {...landingContent.about, image: e.target.value}
                 })}
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-gray-800"
               />
             </div>
           </div>
         );
       
+      // ================== TAMBAHKAN CASE BARU INI ==================
+    case 'features':
+        return (
+            <div className="space-y-6">
+                <div className="flex justify-between items-center">
+                    <h3 className="text-lg font-medium text-gray-900">Feature Items</h3>
+                    <button type="button" onClick={addFeature} className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+                        Tambah Fitur
+                    </button>
+                </div>
+                <div className="space-y-4">
+                    {(landingContent.features || []).map((feature, index) => (
+                        <div key={feature.id} className="border border-gray-200 rounded-lg p-4">
+                            <div className="flex justify-between items-start mb-3">
+                                <h4 className="text-md font-medium text-gray-900">Fitur {index + 1}</h4>
+                                <button type="button" onClick={() => removeFeature(feature.id)} className="text-red-600 hover:text-red-900">Hapus</button>
+                            </div>
+                            <div className="space-y-4">
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Ikon (Emoji)</label>
+                                    <input
+                                        type="text"
+                                        value={feature.icon}
+                                        onChange={(e) => {
+                                            const newFeatures = [...landingContent.features];
+                                            newFeatures[index].icon = e.target.value;
+                                            setLandingContent({ ...landingContent, features: newFeatures });
+                                        }}
+                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 text-gray-800"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Judul</label>
+                                    <input
+                                        type="text"
+                                        value={feature.title}
+                                        onChange={(e) => {
+                                            const newFeatures = [...landingContent.features];
+                                            newFeatures[index].title = e.target.value;
+                                            setLandingContent({ ...landingContent, features: newFeatures });
+                                        }}
+                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 text-gray-800"
+                                    />
+                                </div>
+                                <div>
+                                    <label className="block text-sm font-medium text-gray-700">Deskripsi</label>
+                                    <textarea
+                                        rows={2}
+                                        value={feature.description}
+                                        onChange={(e) => {
+                                            const newFeatures = [...landingContent.features];
+                                            newFeatures[index].description = e.target.value;
+                                            setLandingContent({ ...landingContent, features: newFeatures });
+                                        }}
+                                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 text-gray-800"
+                                    />
+                                </div>
+                            </div>
+                        </div>
+                    ))}
+                </div>
+            </div>
+        );
+    // ============================================================
+
+        
       case 'services':
         return (
           <div className="space-y-6">
@@ -415,7 +473,7 @@ export default function LandingPageManager() {
                             services: newServices
                           });
                         }}
-                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-gray-800"
                       />
                     </div>
                     
@@ -432,7 +490,7 @@ export default function LandingPageManager() {
                             services: newServices
                           });
                         }}
-                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-gray-800"
                       />
                     </div>
                   </div>
@@ -489,7 +547,7 @@ export default function LandingPageManager() {
                             testimonials: newTestimonials
                           });
                         }}
-                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-gray-800"
                       />
                     </div>
                     
@@ -506,7 +564,7 @@ export default function LandingPageManager() {
                             testimonials: newTestimonials
                           });
                         }}
-                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-gray-800"
                       />
                     </div>
                     
@@ -523,7 +581,7 @@ export default function LandingPageManager() {
                             testimonials: newTestimonials
                           });
                         }}
-                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-gray-800"
                       />
                     </div>
                     
@@ -540,7 +598,7 @@ export default function LandingPageManager() {
                             testimonials: newTestimonials
                           });
                         }}
-                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                        className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-gray-800"
                       />
                     </div>
                   </div>
@@ -562,7 +620,7 @@ export default function LandingPageManager() {
                   ...landingContent,
                   contact: {...landingContent.contact, title: e.target.value}
                 })}
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-gray-800"
               />
             </div>
             
@@ -575,7 +633,7 @@ export default function LandingPageManager() {
                   ...landingContent,
                   contact: {...landingContent.contact, description: e.target.value}
                 })}
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-gray-800"
               />
             </div>
             
@@ -588,7 +646,7 @@ export default function LandingPageManager() {
                   ...landingContent,
                   contact: {...landingContent.contact, email: e.target.value}
                 })}
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-gray-800"
               />
             </div>
             
@@ -601,7 +659,7 @@ export default function LandingPageManager() {
                   ...landingContent,
                   contact: {...landingContent.contact, phone: e.target.value}
                 })}
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-gray-800"
               />
             </div>
             
@@ -614,7 +672,7 @@ export default function LandingPageManager() {
                   ...landingContent,
                   contact: {...landingContent.contact, address: e.target.value}
                 })}
-                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500"
+                className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 text-gray-800"
               />
             </div>
           </div>
@@ -629,157 +687,225 @@ export default function LandingPageManager() {
     }
   };
 
+// 1. BLOK "IF" HANYA UNTUK MENAMPILKAN PESAN LOADING
+  if (isLoading) {
+    return (
+      <ProtectedRoute>
+        <AdminLayout>
+          <div className="flex justify-center items-center h-64">
+            <p className="text-lg">Memuat data konten...</p>
+          </div>
+        </AdminLayout>
+      </ProtectedRoute>
+    );
+  }
+
   return (
     <ProtectedRoute>
-    {/* Semua konten sekarang dibungkus oleh AdminLayout */}
-    <AdminLayout>
-    <>
-      <Head>
-        <title>Manajemen Landing Page - Valerie CMS</title>
-      </Head>
+      <AdminLayout>
+        <>
+          <Head>
+            <title>Manajemen Landing Page - Valerie CMS</title>
+          </Head>
 
-        {/* Main Content */}
-        <main className="py-6">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="mb-6">
-              <div className="flex flex-col md:flex-row md:items-center md:justify-between">
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-900">Manajemen Landing Page</h1>
-                  <p className="mt-1 text-sm text-gray-500">Kelola tampilan website utama Anda</p>
-                </div>
-                <div className="mt-4 md:mt-0">
-                  <Link
-                    href="/"
-                    target="_blank"
-                    className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-                  >
-                    <svg className="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
-                    </svg>
-                    Lihat Website
-                  </Link>
-                </div>
-              </div>
-            </div>
-
-            {/* Tabs */}
-            <div className="mb-6">
-              <div className="border-b border-gray-200">
-                <nav className="-mb-px flex space-x-8">
-                  <button
-                    onClick={() => setActiveTab('hero')}
-                    className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
-                      activeTab === 'hero'
-                        ? 'border-primary-500 text-primary-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    }`}
-                  >
-                    Hero Section
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('slider')}
-                    className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
-                      activeTab === 'slider'
-                        ? 'border-primary-500 text-primary-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    }`}
-                  >
-                    Slider
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('about')}
-                    className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
-                      activeTab === 'about'
-                        ? 'border-primary-500 text-primary-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    }`}
-                  >
-                    About
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('services')}
-                    className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
-                      activeTab === 'services'
-                        ? 'border-primary-500 text-primary-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    }`}
-                  >
-                    Services
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('testimonials')}
-                    className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
-                      activeTab === 'testimonials'
-                        ? 'border-primary-500 text-primary-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    }`}
-                  >
-                    Testimonials
-                  </button>
-                  <button
-                    onClick={() => setActiveTab('contact')}
-                    className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
-                      activeTab === 'contact'
-                        ? 'border-primary-500 text-primary-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300'
-                    }`}
-                  >
-                    Contact
-                  </button>
-                </nav>
-              </div>
-            </div>
-
-            {/* Content Area */}
-            <div className="bg-white shadow sm:rounded-lg">
-              <div className="px-4 py-5 sm:p-6">
-                <form onSubmit={handleSave}>
-                  {renderTabContent()}
-                  
-                  <div className="mt-8 flex justify-end">
-                    <button
-                      type="submit"
-                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-                    >
-                      <svg className="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
-                      </svg>
-                      Simpan Perubahan
-                    </button>
+          {/* Main Content */}
+          <main className="py-6">
+            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+              <div className="mb-6">
+                <div className="flex flex-col md:flex-row md:items-center md:justify-between">
+                  <div>
+                    <h1 className="text-2xl font-bold text-gray-900">
+                      Manajemen Landing Page
+                    </h1>
+                    <p className="mt-1 text-sm text-gray-500">
+                      Kelola tampilan website utama Anda
+                    </p>
                   </div>
-                </form>
-              </div>
-            </div>
-
-            {/* Preview Section */}
-            <div className="mt-8 bg-white shadow sm:rounded-lg">
-              <div className="px-4 py-5 sm:p-6">
-                <h3 className="text-lg font-medium text-gray-900 mb-4">Preview Perubahan</h3>
-                <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-                  <svg className="mx-auto h-12 w-12 text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z" />
-                  </svg>
-                  <h3 className="mt-2 text-sm font-medium text-gray-900">Preview Konten</h3>
-                  <p className="mt-1 text-sm text-gray-500">
-                    Perubahan akan terlihat di website utama setelah disimpan.
-                  </p>
-                  <div className="mt-6">
+                  <div className="mt-4 md:mt-0">
                     <Link
                       href="/"
                       target="_blank"
-                      className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                      className="inline-flex items-center px-4 py-2 border border-gray-300 shadow-sm text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
                     >
+                      <svg
+                        className="-ml-1 mr-2 h-5 w-5"
+                        xmlns="http://www.w3.org/2000/svg"
+                        fill="none"
+                        viewBox="0 0 24 24"
+                        stroke="currentColor"
+                      >
+                        <path
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          strokeWidth={2}
+                          d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14"
+                        />
+                      </svg>
                       Lihat Website
                     </Link>
                   </div>
                 </div>
               </div>
+
+              {/* Tabs */}
+              <div className="mb-6">
+                <div className="border-b border-gray-200">
+                  <nav className="-mb-px flex space-x-8">
+                    <button
+                      onClick={() => setActiveTab("hero")}
+                      className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
+                        activeTab === "hero"
+                          ? "border-primary-500 text-primary-600"
+                          : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                      }`}
+                    >
+                      Hero Section
+                    </button>
+                    <button
+                      onClick={() => setActiveTab("slider")}
+                      className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
+                        activeTab === "slider"
+                          ? "border-primary-500 text-primary-600"
+                          : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                      }`}
+                    >
+                      Slider
+                    </button>
+                    <button
+                      onClick={() => setActiveTab("about")}
+                      className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
+                        activeTab === "about"
+                          ? "border-primary-500 text-primary-600"
+                          : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                      }`}
+                    >
+                      About
+                    </button>
+                    <button
+                      onClick={() => setActiveTab("features")}
+                      className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
+                        activeTab === "features"
+                          ? "border-blue-500 text-blue-600"
+                          : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                      }`}
+                    >
+                      Features
+                    </button>
+                    <button
+                      onClick={() => setActiveTab("services")}
+                      className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
+                        activeTab === "services"
+                          ? "border-primary-500 text-primary-600"
+                          : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                      }`}
+                    >
+                      Services
+                    </button>
+                    <button
+                      onClick={() => setActiveTab("testimonials")}
+                      className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
+                        activeTab === "testimonials"
+                          ? "border-primary-500 text-primary-600"
+                          : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                      }`}
+                    >
+                      Testimonials
+                    </button>
+                    <button
+                      onClick={() => setActiveTab("contact")}
+                      className={`whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ${
+                        activeTab === "contact"
+                          ? "border-primary-500 text-primary-600"
+                          : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
+                      }`}
+                    >
+                      Contact
+                    </button>
+                  </nav>
+                </div>
+              </div>
+
+              {/* Content Area */}
+              <div className="bg-white shadow sm:rounded-lg">
+                <div className="px-4 py-5 sm:p-6">
+                  <form onSubmit={handleSave}>
+                    {renderTabContent()}
+
+                    <div className="mt-8 flex justify-end">
+                      <button
+                        type="submit"
+                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                      >
+                        <svg
+                          className="-ml-1 mr-2 h-5 w-5"
+                          xmlns="http://www.w3.org/2000/svg"
+                          fill="none"
+                          viewBox="0 0 24 24"
+                          stroke="currentColor"
+                        >
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth={2}
+                            d="M5 13l4 4L19 7"
+                          />
+                        </svg>
+                        Simpan Perubahan
+                      </button>
+                    </div>
+                  </form>
+                </div>
+              </div>
+
+              {/* Preview Section */}
+              <div className="mt-8 bg-white shadow sm:rounded-lg">
+                <div className="px-4 py-5 sm:p-6">
+                  <h3 className="text-lg font-medium text-gray-900 mb-4">
+                    Preview Perubahan
+                  </h3>
+                  <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+                    <svg
+                      className="mx-auto h-12 w-12 text-gray-400"
+                      xmlns="http://www.w3.org/2000/svg"
+                      fill="none"
+                      viewBox="0 0 24 24"
+                      stroke="currentColor"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
+                      />
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
+                      />
+                    </svg>
+                    <h3 className="mt-2 text-sm font-medium text-gray-900">
+                      Preview Konten
+                    </h3>
+                    <p className="mt-1 text-sm text-gray-500">
+                      Perubahan akan terlihat di website utama setelah disimpan.
+                    </p>
+                    <div className="mt-6">
+                      <Link
+                        href="/"
+                        target="_blank"
+                        className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                      >
+                        Lihat Website
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
-          </div>
-        </main>
-    </>
-    </AdminLayout>
+          </main>
+        </>
+      </AdminLayout>
     </ProtectedRoute>
   );
 }

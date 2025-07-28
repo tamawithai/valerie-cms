@@ -9,48 +9,47 @@ datasource db {
 }
 
 model User {
-  id        Int      @id @default(autoincrement())
+  id        Int       @id @default(autoincrement())
   name      String
-  email     String   @unique
-  password  String   @map("password_hash") // Kolom di DB adalah 'password_hash'
-  role      String   @default("Contributor") // 'Admin' or 'Contributor'
-  status    String   @default("Active")      // 'Active' or 'Inactive'
-  createdAt DateTime @default(now()) @map("created_at")
-  updatedAt DateTime @updatedAt @map("updated_at")
+  email     String    @unique
+  password  String    @map("password_hash")
+  role      String    @default("Contributor")
+  status    String    @default("Active")
+  createdAt DateTime  @default(now()) @map("created_at")
+  updatedAt DateTime  @updatedAt @map("updated_at")
   articles  Article[]
 
   @@map("users")
 }
 
-// Tambahkan model ini di mana saja, misalnya di bawah model User
 model Category {
-  id        Int       @id @default(autoincrement())
-  name      String    @unique
-  articles  Article[]
+  id       Int       @id @default(autoincrement())
+  name     String    @unique
+  articles Article[]
 }
 
 model Article {
-  id         Int      @id @default(autoincrement())
-  title      String
-  excerpt    String?
-  content    String
-  author     User     @relation(fields: [authorId], references: [id])
-  authorId   Int      @map("author_id")
-  categoryId Int 
-  category   Category @relation(fields: [categoryId], references: [id])
-  tags       String?  // Bisa disimpan sebagai string terpisah koma
-  status     String   @default("Draft") // 'Draft', 'Pending', 'Published'
+  id          Int       @id @default(autoincrement())
+  title       String
+  excerpt     String?
+  content     String
+  author      User      @relation(fields: [authorId], references: [id])
+  authorId    Int       @map("author_id")
+  categoryId  Int
+  category    Category  @relation(fields: [categoryId], references: [id])
+  tags        String?
+  status      String    @default("Draft")
   publishedAt DateTime? @map("published_at")
-  createdAt  DateTime @default(now()) @map("created_at")
-  updatedAt  DateTime @updatedAt @map("updated_at")
+  createdAt   DateTime  @default(now()) @map("created_at")
+  updatedAt   DateTime  @updatedAt @map("updated_at")
 
   @@map("articles")
 }
 
-model LandingPageContent {
-  id        String   @id
-  data      Json     // Menyimpan seluruh konten dalam format JSON
-  updatedAt DateTime @updatedAt @map("updated_at")
+// Model untuk Landing Page (Diletakkan di sini, BUKAN di dalam model lain)
+model LandingPage {
+  id      Int    @id @default(1)
+  content Json
 
-  @@map("landing_page_content")
+  @@map("landing_pages") // Nama tabel yang lebih sesuai
 }
