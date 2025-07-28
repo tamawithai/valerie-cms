@@ -1,99 +1,77 @@
-// src/pages/api/articles/[id].js
+// src/pages/api/articles/[id].js (Versi Final yang Mempertahankan Semua Fitur)
 import { PrismaClient } from '@prisma/client';
-
 const prisma = new PrismaClient();
 
 export default async function handler(req, res) {
   const { id } = req.query;
-
-  // Validasi ID
-  if (!id || isNaN(parseInt(id))) {
-    return res.status(400).json({ message: 'Invalid article ID' });
-  }
-
   const articleId = parseInt(id);
 
   if (req.method === 'GET') {
-    // --- GET: Mendapatkan satu artikel ---
     try {
       const article = await prisma.article.findUnique({
         where: { id: articleId },
         include: {
-          author: {
-            select: {
-              id: true,
-              name: true,
-              email: true,
-            },
-          },
+          author: { select: { id: true, name: true, email: true } },
+          category: true,
         },
       });
-
       if (!article) {
         return res.status(404).json({ message: 'Article not found' });
       }
-
       res.status(200).json(article);
     } catch (error) {
       console.error("API Error fetching article:", error);
       res.status(500).json({ message: 'Failed to fetch article', error: error.message });
     } finally {
+      // FUNGSI DIKEMBALIKAN: Memastikan koneksi ditutup
       await prisma.$disconnect();
     }
-
   } else if (req.method === 'PUT') {
-    // --- PUT: Memperbarui artikel ---
     try {
       const { title, excerpt, content, categoryId, tags, status } = req.body;
 
-      // Validasi input dasar (bisa diperluas)
       if (!title || !content) {
         return res.status(400).json({ message: 'Title and content are required' });
       }
-
+      
+      const updateData = { title, excerpt, content, tags, status };
+      if (categoryId) {
+        updateData.category = {
+          connect: { id: parseInt(categoryId) }
+        };
+      }
+      
       const updatedArticle = await prisma.article.update({
         where: { id: articleId },
-        data: {
-          title,
-          excerpt,
-          content,
-          categoryId: categoryId ? parseInt(categoryId) : null,
-          tags,
-          status,
-          // updatedAt akan otomatis terupdate oleh Prisma karena @updatedAt
-        },
+        data: updateData,
       });
 
       res.status(200).json(updatedArticle);
     } catch (error) {
       console.error("API Error updating article:", error);
-      if (error.code === 'P2025') { // Record not found
+      if (error.code === 'P2025') {
         return res.status(404).json({ message: 'Article not found' });
       }
       res.status(500).json({ message: 'Failed to update article', error: error.message });
     } finally {
+      // FUNGSI DIKEMBALIKAN: Memastikan koneksi ditutup
       await prisma.$disconnect();
     }
-
   } else if (req.method === 'DELETE') {
-    // --- DELETE: Menghapus artikel ---
     try {
-      await prisma.article.delete({
-        where: { id: articleId },
-      });
-      res.status(204).end(); // No Content
+      await prisma.article.delete({ where: { id: articleId } });
+      res.status(204).end();
     } catch (error) {
       console.error("API Error deleting article:", error);
-      if (error.code === 'P2025') { // Record not found
+      if (error.code === 'P2025') {
         return res.status(404).json({ message: 'Article not found' });
       }
       res.status(500).json({ message: 'Failed to delete article', error: error.message });
     } finally {
+      // FUNGSI DIKEMBALIKAN: Memastikan koneksi ditutup
       await prisma.$disconnect();
     }
-
   } else {
-    // Method tidak diizinkan
     res.setHeader('Allow', ['GET', 'PUT', 'DELETE']);
     res.status(405).end(`Method ${req.method} Not Allowed`);
   }
