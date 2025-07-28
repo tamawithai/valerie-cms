@@ -27,11 +27,6 @@ export default function AdminDashboard() {
   return (
     <ProtectedRoute>
       <AdminLayout>
-        {/*
-          CATATAN: Sebelumnya ada <>, <Head>, <div>, <main> di sini.
-          Struktur ini saya sederhanakan agar lebih bersih, karena AdminLayout
-          sudah menyediakan tag <main>.
-        */}
         <Head>
           <title>Dashboard - Valerie CMS</title>
         </Head>
@@ -132,15 +127,6 @@ export default function AdminDashboard() {
             </div>
           </div>
         </div>
-        
-        {/*
-          // --- PERBAIKAN DI SINI ---
-          // Kode di bawah ini yang menyebabkan error sudah saya hapus:
-          // </div>
-          // </>
-          // Karena struktur yang benar sudah ditangani oleh AdminLayout.
-          // Halaman ini tidak perlu tag pembungkus tambahan lagi.
-        */}
       </AdminLayout>
     </ProtectedRoute>
   );

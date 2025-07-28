@@ -3,6 +3,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import ProtectedRoute from '../../../components/ProtectedRoute';
+import AdminLayout from '../../../components/AdminLayout';
 
 export default function ManageCategories() {
   const [categories, setCategories] = useState([]);
@@ -64,11 +65,11 @@ export default function ManageCategories() {
 
   return (
     <ProtectedRoute>
+      <AdminLayout>
       <>
         <Head><title>Manajemen Kategori - Valerie CMS</title></Head>
-        <div className="min-h-screen bg-gray-50">
-          {/* Anda bisa meletakkan komponen Navbar di sini jika perlu */}
-          <main className="py-10">
+        
+          <div className="py-10">
             <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
               <h1 className="text-2xl font-bold text-gray-900 mb-6">Manajemen Kategori</h1>
 
@@ -111,9 +112,9 @@ export default function ManageCategories() {
                   </Link>
                 </div>
             </div>
-          </main>
-        </div>
+          </div>
       </>
+      </AdminLayout>
     </ProtectedRoute>
   );
 }

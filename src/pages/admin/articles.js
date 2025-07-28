@@ -3,6 +3,7 @@ import Head from 'next/head';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import ProtectedRoute from '../../components/ProtectedRoute'; // Pastikan path ini benar
+import AdminLayout from '../../components/AdminLayout';
 
 export default function Articles() {
   const [articles, setArticles] = useState([]); // Default kosong
@@ -67,19 +68,22 @@ export default function Articles() {
   // Tampilkan loading state
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <AdminLayout>
+      <div className="flex items-center justify-center py-20">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary-600 mx-auto"></div>
           <p className="mt-4 text-gray-600">Memuat data artikel...</p>
         </div>
       </div>
+      </AdminLayout>
     );
   }
 
   // Tampilkan error state
   if (error) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <AdminLayout>
+      <div className="flex items-center justify-center py-20">
         <div className="max-w-md w-full bg-white rounded-lg shadow-lg p-8 text-center">
           <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100">
             <svg className="h-6 w-6 text-red-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -98,78 +102,20 @@ export default function Articles() {
           </div>
         </div>
       </div>
+      </AdminLayout>
     );
   }
 
   return (
     <ProtectedRoute>
+      <AdminLayout>
     <>
       <Head>
         <title>Manajemen Artikel - Valerie CMS</title>
       </Head>
 
-      <div className="min-h-screen bg-gray-50">
-        {/* Navbar - sama seperti sebelumnya */}
-        <nav className="bg-white shadow-sm">
-          {/* ... (kode navbar sama seperti file sebelumnya) ... */}
-          {/* Untuk ringkasnya, kita asumsikan navbar sudah ada dan benar */}
-          {/* Anda bisa copy-paste dari file users.js atau dashboard.js */}
-           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between h-16">
-              <div className="flex">
-                <div className="flex-shrink-0 flex items-center">
-                  <span className="text-xl font-bold text-primary-600">Valerie CMS</span>
-                </div>
-                <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-                  <Link href="/admin/dashboard" className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                    Dashboard
-                  </Link>
-                  <Link href="/admin/articles" className="border-primary-500 text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                    Artikel
-                  </Link>
-                  <Link href="/admin/moderation" className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                    Moderasi
-                  </Link>
-                  <Link href="/admin/landing" className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                    Landing Page
-                  </Link>
-                  <Link href="/admin/users" className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                    Pengguna
-                  </Link>
-                </div>
-              </div>
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <Link
-                    href="/admin/articles/new"
-                    className="relative inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-                  >
-                    <svg className="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-                    </svg>
-                    <span>Buat Artikel</span>
-                  </Link>
-                </div>
-                <div className="ml-3 relative">
-                  <div>
-                    <button
-                      type="button"
-                      className="bg-white rounded-full flex text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-                    >
-                      <span className="sr-only">Open user menu</span>
-                      <div className="h-8 w-8 rounded-full bg-primary-100 flex items-center justify-center">
-                        <span className="text-primary-800 font-medium">A</span>
-                      </div>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </nav>
-
         {/* Main Content */}
-        <main className="py-6">
+        <div className="py-6">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="mb-6">
               <div className="flex flex-col md:flex-row md:items-center md:justify-between">
@@ -307,10 +253,10 @@ export default function Articles() {
                 </table>
               </div>
             </div>
-          </div>
-        </main>
-      </div>
+            </div>
+            </div>
     </>
+    </AdminLayout>
     </ProtectedRoute>
   );
 }
