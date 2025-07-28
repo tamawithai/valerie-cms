@@ -1,41 +1,25 @@
-// src/pages/admin/users/new.js
+// src/pages/admin/users/new.js (VERSI FINAL YANG SUDAH DIPERBAIKI)
 import Head from 'next/head';
 import Link from 'next/link';
-import { useState, useRef, useEffect } from 'react';
+import { useState } from 'react'; // Hapus useRef dan useEffect karena tidak perlu lagi
 import { useRouter } from 'next/router';
-import ProtectedRoute from '../../../components/ProtectedRoute'; // Path sudah diperbaiki
-import { useAuth } from '../../../context/AuthContext';
+import ProtectedRoute from '../../../components/ProtectedRoute';
+import AdminLayout from '../../../components/AdminLayout'; // BARU: Import AdminLayout
 
 export default function NewUser() {
   const router = useRouter();
-  const [isUserMenuOpen, setIsUserMenuOpen] = useState(false);
-  const userMenuRef = useRef(null);
-  const { user: loggedInUser, logout } = useAuth();
 
-  useEffect(() => {
-    function handleClickOutside(event) {
-      if (userMenuRef.current && !userMenuRef.current.contains(event.target)) {
-        setIsUserMenuOpen(false);
-      }
-    }
-
-    if (isUserMenuOpen) {
-      document.addEventListener("mousedown", handleClickOutside);
-    }
-
-    return () => {
-      document.removeEventListener("mousedown", handleClickOutside);
-    };
-  }, [isUserMenuOpen]);
-
-  // State untuk user baru, sekarang dengan password
+  // State untuk data form pengguna baru
   const [user, setUser] = useState({
     name: '',
     email: '',
-    password: '', // Ditambahkan untuk input password
+    password: '',
     role: 'Contributor',
     status: 'Active'
   });
+  
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [error, setError] = useState(null);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -47,15 +31,18 @@ export default function NewUser() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(null);
+
     if (!user.name || !user.email || !user.password) {
-       alert('Nama, Email, dan Password wajib diisi.');
-       return;
+      setError('Nama Lengkap, Email, dan Password wajib diisi.');
+      return;
     }
     if (user.password.length < 8) {
-        alert('Password minimal harus 8 karakter.');
-        return;
+      setError('Password minimal harus 8 karakter.');
+      return;
     }
 
+    setIsSubmitting(true);
     try {
       const response = await fetch('/api/users', {
         method: 'POST',
@@ -73,93 +60,24 @@ export default function NewUser() {
       const newUser = await response.json();
       alert(`Pengguna ${newUser.name} berhasil ditambahkan!`);
       router.push('/admin/users');
-    } catch (error) {
-      console.error("Gagal menambahkan pengguna:", error);
-      alert('Gagal menambahkan pengguna: ' + error.message);
+    } catch (err) {
+      setError('Gagal menambahkan pengguna: ' + err.message);
+      console.error("Gagal menambahkan pengguna:", err);
+    } finally {
+        setIsSubmitting(false);
     }
   };
 
   return (
     <ProtectedRoute>
-    <>
-      <Head>
-        <title>Tambah Pengguna Baru - Valerie CMS</title>
-      </Head>
-      <div className="min-h-screen bg-gray-50">
-        {/* Navbar */}
-        <nav className="bg-white shadow-sm">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between h-16">
-              <div className="flex">
-                <div className="flex-shrink-0 flex items-center">
-                  <span className="text-xl font-bold text-primary-600">Valerie CMS</span>
-                </div>
-                <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-                  <Link href="/admin/dashboard" className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                    Dashboard
-                  </Link>
-                  <Link href="/admin/articles" className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                    Artikel
-                  </Link>
-                  <Link href="/admin/moderation" className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                     Moderasi
-                   </Link>
-                  <Link href="/admin/landing" className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                    Landing Page
-                  </Link>
-                  <Link href="/admin/users" className="border-primary-500 text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                    Pengguna
-                  </Link>
-                </div>
-              </div>
-              <div className="flex items-center">
-                <div className="ml-3 relative">
-                  <div>
-                    <button
-                      type="button"
-                      className="bg-white rounded-full flex text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-                      id="user-menu-button"
-                      aria-expanded={isUserMenuOpen}
-                      aria-haspopup="true"
-                      onClick={() => setIsUserMenuOpen(!isUserMenuOpen)}
-                    >
-                      <span className="sr-only">Open user menu</span>
-                      <div className="h-8 w-8 rounded-full bg-primary-100 flex items-center justify-center">
-                        <span className="text-primary-800 font-medium">
-                          {loggedInUser?.name ? loggedInUser.name.charAt(0).toUpperCase() : 'U'}
-                        </span>
-                      </div>
-                    </button>
-                  </div>
-                  {isUserMenuOpen && (
-                    <div
-                      ref={userMenuRef}
-                      className="origin-top-right absolute right-0 mt-2 w-48 rounded-md shadow-lg py-1 bg-white ring-1 ring-black ring-opacity-5 focus:outline-none z-50"
-                      role="menu"
-                      aria-orientation="vertical"
-                      aria-labelledby="user-menu-button"
-                      tabIndex="-1"
-                    >
-                      <div className="block px-4 py-2 text-sm text-gray-700 border-b border-gray-200">
-                        <p className="font-medium truncate">{loggedInUser?.name || 'User'}</p>
-                        <p className="truncate text-gray-500 text-xs">{loggedInUser?.email || ''}</p>
-                      </div>
-                      <button
-                        onClick={logout}
-                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
-                        role="menuitem"
-                        tabIndex="-1"
-                      >
-                        Keluar
-                      </button>
-                    </div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </div>
-        </nav>
-        {/* Main Content */}
+      {/* DIUBAH: Seluruh halaman dibungkus AdminLayout */}
+      <AdminLayout>
+        <Head>
+          <title>Tambah Pengguna Baru - Valerie CMS</title>
+        </Head>
+        
+        {/* DIHAPUS: Semua kode <nav> dan div pembungkusnya dihapus */}
+
         <main className="py-6">
           <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="mb-6">
@@ -173,6 +91,14 @@ export default function NewUser() {
                 <h1 className="text-2xl font-bold text-gray-900 ml-4">Tambah Pengguna Baru</h1>
               </div>
             </div>
+
+            {/* Menampilkan pesan error jika ada */}
+            {error && (
+                <div className="mb-4 p-4 bg-red-100 text-red-700 border border-red-400 rounded">
+                    {error}
+                </div>
+            )}
+            
             <form onSubmit={handleSubmit} className="bg-white shadow sm:rounded-lg">
               <div className="px-4 py-5 sm:p-6">
                 <div className="space-y-6">
@@ -206,7 +132,7 @@ export default function NewUser() {
                       className="mt-1 block w-full border border-gray-300 rounded-md shadow-sm py-2 px-3 focus:outline-none focus:ring-primary-500 focus:border-primary-500 sm:text-sm"
                     />
                   </div>
-                  {/* Password (BARU) */}
+                  {/* Password */}
                   <div>
                     <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                       Password
@@ -292,20 +218,17 @@ export default function NewUser() {
                   </Link>
                   <button
                     type="submit"
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
+                    disabled={isSubmitting}
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-primary-600 hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500 disabled:opacity-50"
                   >
-                    <svg className="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
-                    </svg>
-                    Tambah Pengguna
+                    {isSubmitting ? 'Menyimpan...' : 'Tambah Pengguna'}
                   </button>
                 </div>
               </div>
             </form>
           </div>
         </main>
-      </div>
-    </>
+      </AdminLayout>
     </ProtectedRoute>
   );
 }

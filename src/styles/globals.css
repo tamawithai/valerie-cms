@@ -145,3 +145,20 @@
     transform: translateY(0) scale(1);
   }
 }
+
+/* ======================================================= */
+/* PERBAIKAN FINAL UNTUK WARNA TEKS INPUT (LEBIH KUAT)     */
+/* ======================================================= */
+@layer base {
+  .admin-panel input,
+  .admin-panel textarea,
+  .admin-panel select {
+    color: #1F2937 !important; /* Abu-abu gelap, !important untuk memaksa override */
+  }
+
+  /* BONUS: Mengatur warna placeholder agar terlihat jelas juga */
+  .admin-panel ::placeholder {
+    color: #6B7280; /* Abu-abu sedang (Tailwind's gray-500) */
+    opacity: 1; /* Memastikan placeholder terlihat penuh */
+  }
+}

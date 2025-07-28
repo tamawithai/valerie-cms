@@ -1,9 +1,10 @@
-// src/pages/admin/articles/new.js
+// src/pages/admin/articles/new.js (VERSI FINAL YANG SUDAH DIPERBAIKI)
 import Head from 'next/head';
 import Link from 'next/link';
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/router';
 import ProtectedRoute from '../../../components/ProtectedRoute';
+import AdminLayout from '../../../components/AdminLayout'; // BARU: Import AdminLayout
 
 export default function NewArticle() {
   const router = useRouter();
@@ -15,7 +16,7 @@ export default function NewArticle() {
     categoryId: '',
     tags: '',
     status: 'Draft',
-    authorId: 1,
+    authorId: 1, // Anda mungkin ingin mengambil ini dari user yang sedang login
   });
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState(null);
@@ -98,56 +99,14 @@ export default function NewArticle() {
 
   return (
     <ProtectedRoute>
-    <>
-      <Head>
-        <title>Buat Artikel Baru - Valerie CMS</title>
-      </Head>
+      {/* UBAH: Seluruh konten sekarang dibungkus oleh AdminLayout */}
+      <AdminLayout>
+        <Head>
+          <title>Buat Artikel Baru - Valerie CMS</title>
+        </Head>
 
-      <div className="min-h-screen bg-gray-50">
-        <nav className="bg-white shadow-sm">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between h-16">
-              <div className="flex">
-                <div className="flex-shrink-0 flex items-center">
-                  <span className="text-xl font-bold text-primary-600">Valerie CMS</span>
-                </div>
-                <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-                  <Link href="/admin/dashboard" className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                    Dashboard
-                  </Link>
-                  <Link href="/admin/articles" className="border-primary-500 text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                    Artikel
-                  </Link>
-                  <Link href="/admin/moderation" className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                    Moderasi
-                  </Link>
-                  <Link href="/admin/landing" className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                    Landing Page
-                  </Link>
-                  <Link href="/admin/users" className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                    Pengguna
-                  </Link>
-                </div>
-              </div>
-              <div className="flex items-center">
-                <div className="ml-3 relative">
-                  <div>
-                    <button
-                      type="button"
-                      className="bg-white rounded-full flex text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-                    >
-                      <span className="sr-only">Open user menu</span>
-                      <div className="h-8 w-8 rounded-full bg-primary-100 flex items-center justify-center">
-                        <span className="text-primary-800 font-medium">A</span>
-                      </div>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </nav>
-
+        {/* HAPUS: Seluruh blok <nav>...</nav> dan div pembungkusnya dihapus karena sudah disediakan oleh AdminLayout */}
+        
         <main className="py-6">
           <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="mb-6">
@@ -162,6 +121,7 @@ export default function NewArticle() {
               </div>
             </div>
 
+            {/* Sisa dari kode form tidak berubah sama sekali */}
             {submitError && (
               <div className="mb-6 bg-red-50 border-l-4 border-red-400 p-4">
                 <div className="flex">
@@ -180,7 +140,8 @@ export default function NewArticle() {
             )}
 
             <form onSubmit={handleSubmit} className="bg-white shadow sm:rounded-lg">
-              <div className="px-4 py-5 sm:p-6">
+              {/* ... (seluruh isi form Anda tetap sama) ... */}
+               <div className="px-4 py-5 sm:p-6">
                 <div className="space-y-6">
                   <div>
                     <label htmlFor="title" className="block text-sm font-medium text-gray-700">
@@ -328,8 +289,7 @@ export default function NewArticle() {
             </form>
           </div>
         </main>
-      </div>
-    </>
+      </AdminLayout>
     </ProtectedRoute>
   );
 }
