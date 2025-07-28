@@ -47,5 +47,7 @@ module.exports = {
       // --- SAMPAI SINI ---
     },
   },
-  plugins: [],
+  plugins: [
+    require('@tailwindcss/typography'),
+  ],
 }
