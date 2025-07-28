@@ -18,7 +18,7 @@ const ChevronRight = () => (
 );
 
 // Komponen Home sekarang menerima 'content' dari getServerSideProps
-export default function Home({ content }) {
+export default function Home({ content, contactInfo, services }) {
   // Logic untuk slider tetap dipertahankan
   const sliderRef = useRef(null);
 
@@ -262,61 +262,65 @@ export default function Home({ content }) {
                 Punya pertanyaan? Kami siap membantu Anda.
               </p>
             </div>
+
             <div
-              className="max-w-2xl mx-auto mt-12 slide-up text-center"
+              className="max-w-2xl mx-auto mt-12 slide-up"
               style={{ animationDelay: "200ms" }}
             >
-              <div className="p-8 glass-card">
-                {content.contact?.description && (
-                  <p className="text-lg text-gray-300 mb-6">
-                    {content.contact.description}
-                  </p>
-                )}
-                <div className="space-y-4">
-                  {content.contact?.email && (
-                    <div>
-                      <h4 className="text-sm font-semibold uppercase tracking-wider text-gray-400">
-                        Email
-                      </h4>
-                      <a
-                        href={`mailto:${content.contact.email}`}
-                        className="text-xl text-white hover:text-blue-400"
-                      >
-                        {content.contact.email}
-                      </a>
-                    </div>
-                  )}
-                  {content.contact?.phone && (
-                    <div>
-                      <h4 className="text-sm font-semibold uppercase tracking-wider text-gray-400">
-                        Telepon
-                      </h4>
-                      <a
-                        href={`tel:${content.contact.phone}`}
-                        className="text-xl text-white hover:text-blue-400"
-                      >
-                        {content.contact.phone}
-                      </a>
-                    </div>
-                  )}
-                  {content.contact?.address && (
-                    <div>
-                      <h4 className="text-sm font-semibold uppercase tracking-wider text-gray-400">
-                        Alamat
-                      </h4>
-                      <p className="text-xl text-white">
-                        {content.contact.address}
-                      </p>
-                    </div>
-                  )}
+              <form className="space-y-6 p-8 glass-card">
+                <div>
+                  <label
+                    htmlFor="name"
+                    className="block text-sm font-medium text-gray-300 mb-2"
+                  >
+                    Nama Lengkap
+                  </label>
+                  <input
+                    type="text"
+                    id="name"
+                    className="glass-input"
+                    placeholder="Nama Anda"
+                  />
                 </div>
-              </div>
+                <div>
+                  <label
+                    htmlFor="email"
+                    className="block text-sm font-medium text-gray-300 mb-2"
+                  >
+                    Email
+                  </label>
+                  <input
+                    type="email"
+                    id="email"
+                    className="glass-input"
+                    placeholder="email@anda.com"
+                  />
+                </div>
+                <div>
+                  <label
+                    htmlFor="message"
+                    className="block text-sm font-medium text-gray-300 mb-2"
+                  >
+                    Pesan
+                  </label>
+                  <textarea
+                    id="message"
+                    rows={4}
+                    className="glass-input"
+                    placeholder="Tulis pesan Anda di sini..."
+                  ></textarea>
+                </div>
+                <button type="submit" className="w-full btn btn-primary">
+                  Kirim Pesan
+                </button>
+              </form>
             </div>
+
           </div>
         </section>
       </main>
 
-      <Footer />
+      <Footer contactInfo={contactInfo} services={services} />
     </div>
   );
 }
@@ -352,9 +356,13 @@ export async function getServerSideProps() {
     contact: { title: "", description: "", email: "", phone: "", address: "" }
   };
 
-  return {
-    props: {
-      content: dbContent ? dbContent.content : defaultContent,
-    },
-  };
+const content = dbContent ? dbContent.content : defaultContent;
+
+return {
+  props: {
+    content: content,
+    contactInfo: content.contact || null,
+    services: content.services || [], // <-- TAMBAHKAN BARIS INI
+  },
+};
 }
