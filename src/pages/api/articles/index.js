@@ -22,13 +22,26 @@ export default async function handler(req, res) {
     }
   } else if (req.method === 'POST') {
     try {
-      const articleData = req.body;
+
+      // Ambil langsung authorId & categoryId dari body
+     const {
+       title,
+       excerpt,
+       content,
+       thumbnail,
+       tags,
+       status,
+       authorId,
+       categoryId
+     } = req.body;
 
       // FUNGSI DIKEMBALIKAN: Validasi author diperbaiki & disesuaikan
-      const authorId = articleData.author?.connect?.id;
-      if (!articleData.title || !articleData.content || !authorId) {
-        return res.status(400).json({ message: 'Title, content, and author are required.' });
-      }
+     if (!title || !content || !authorId) {
+       return res.status(400).json({ message: 'Title, content, and author are required.' });
+     }
+     if (!categoryId) {
+        return res.status(400).json({ message: 'Category is required.' });
+     }
 
       const authorExists = await prisma.user.findUnique({
         where: { id: parseInt(authorId) },
@@ -38,22 +51,24 @@ export default async function handler(req, res) {
         return res.status(400).json({ message: 'Invalid authorId' });
       }
 
-      if (!authorId || !articleData.categoryId) {
-        return res
-          .status(400)
-          .json({ message: "authorId dan categoryId wajib ada!" });
-      }
+          // (Opsional) validasi kategori
+     const categoryExists = await prisma.category.findUnique({
+       where: { id: parseInt(categoryId) },
+    });
+      if (!categoryExists) {
+       return res.status(400).json({ message: 'Invalid categoryId' });
+     }
 
-      const newArticle = await prisma.article.create({
+          const newArticle = await prisma.article.create({
         data: {
-          title: articleData.title,
-          excerpt: articleData.excerpt,
-          content: articleData.content,
-          thumbnail: articleData.thumbnail,
-          tags: articleData.tags,
-          status: articleData.status,
-          author: { connect: { id: Number(authorId) } },
-          category: { connect: { id: Number(articleData.categoryId) } },
+          title,
+          excerpt,
+          content,
+          thumbnail,
+          tags,
+          status,
+          author:   { connect: { id: parseInt(authorId)   } },
+          category: { connect: { id: parseInt(categoryId) } },
         },
       });
 
