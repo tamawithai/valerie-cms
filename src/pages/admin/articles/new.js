@@ -255,7 +255,7 @@ export default function NewArticle() {
                     placeholder="Ringkasan singkat tentang artikel ini..."
                   />
                 </div>
-                {/* TipTap Editor */}
+                {/* Editor */}
                 <div>
                   <label className="block text-sm font-medium text-gray-700">
                     Konten Artikel
@@ -269,12 +269,62 @@ export default function NewArticle() {
                       }
                       modules={{
                         toolbar: [
-                          [{ header: [1, 2, false] }],
-                          ["bold", "italic", "underline"],
-                          ["image", "code-block"],
+                          [{ font: [] }],
+                          [{ header: [1, 2, 3, 4, 5, 6, false] }],
+                          ["bold", "italic", "underline", "strike"],
+                          [{ color: [] }, { background: [] }],
+                          [{ script: "sub" }, { script: "super" }],
+                          ["blockquote", "code-block"],
+                          [
+                            { list: "ordered" },
+                            { list: "bullet" },
+                            { indent: "-1" },
+                            { indent: "+1" },
+                          ],
+                          [{ align: [] }],
+                          ["link", "image", "video"],
+                          ["clean"],
                         ],
                       }}
+                      formats={[
+                        "font",
+                        "header",
+                        "bold",
+                        "italic",
+                        "underline",
+                        "strike",
+                        "color",
+                        "background",
+                        "script",
+                        "blockquote",
+                        "code-block",
+                        "list",
+                        "bullet",
+                        "indent",
+                        "align",
+                        "link",
+                        "image",
+                        "video",
+                        "clean",
+                      ]}
+                      style={{
+                        minHeight: 300, // Perbesar tinggi editor minimum (300px, bisa ganti ke 400px)
+                        fontSize: "1rem", // Ukuran font lebih besar
+                        color: "#1a202c", // Tailwind gray-800, font lebih gelap
+                        background: "white",
+                      }}
                     />
+                    <style jsx global>{`
+                      .ql-editor {
+                        min-height: 300px !important; /* Editor lebih tinggi */
+                        font-size: 1.02rem !important; /* Font lebih besar */
+                        color: #1a202c !important; /* Warna font lebih gelap */
+                        background: #fff !important; /* Background tetap putih */
+                      }
+                      .ql-toolbar {
+                        background: #f9fafb;
+                      }
+                    `}</style>
                   </div>
                   <p className="text-xs text-gray-400 mt-1">
                     * Gunakan format rich text, gambar embed dan lainnya
