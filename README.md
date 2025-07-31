@@ -12,64 +12,6 @@ Autentikasi: Sistem login/logout yang aman.
 Responsif: Tampilan yang menarik dan berfungsi baik di desktop maupun mobile.
 Struktur Proyek
 
-valerie-cms/
-├── .gitignore
-├── next.config.js
-├── package.json
-├── postcss.config.js (jika menggunakan Tailwind)
-├── tailwind.config.js (jika menggunakan Tailwind)
-├── README.md (Dokumen ini)
-├── public/
-│ ├── favicon.ico
-│ └── images/
-├── src/
-│ ├── components/
-│ │ ├── Navbar.js
-│ │ ├── Footer.js
-│ │ ├── ProtectedRoute.js
-│ │ └── RoleGuard.js
-│ ├── context/
-│ │ └── AuthContext.js
-│ ├── lib/
-│ │ ├── db.js (Utility database jika tidak menggunakan Prisma penuh)
-│ │ └── cloudinary.js (Utility untuk upload ke Cloudinary)
-│ ├── pages/
-│ │ ├── _app.js
-│ │ ├── index.js (Landing Page)
-│ │ ├── blog/
-│ │ │ ├── index.js (Halaman daftar blog)
-│ │ │ └── [id].js (Halaman detail artikel)
-│ │ ├── admin/
-│ │ │ ├── login.js (Halaman login admin)
-│ │ │ ├── dashboard.js (Dashboard Admin)
-│ │ │ ├── articles/
-│ │ │ │ ├── index.js (Manajemen Artikel)
-│ │ │ │ ├── new.js (Buat Artikel Baru)
-│ │ │ │ └── [id].js (Edit Artikel)
-│ │ │ ├── users/
-│ │ │ │ ├── index.js (Manajemen Pengguna)
-│ │ │ │ ├── new.js (Tambah Pengguna Baru)
-│ │ │ │ └── [id].js (Edit Pengguna)
-│ │ │ ├── landing.js (Manajemen Konten Landing Page)
-│ │ │ ├── moderation.js (Moderasi Artikel)
-│ │ │ └── contributor-dashboard.js (Dashboard untuk Contributor)
-│ │ └── api/
-│ │ ├── auth/
-│ │ │ ├── login.js
-│ │ │ ├── logout.js
-│ │ │ └── me.js
-│ │ ├── users/
-│ │ │ └── index.js
-│ │ ├── articles/
-│ │ │ └── index.js (dan [id].js jika perlu)
-│ │ └── init-db.js (Endpoint untuk inisialisasi tabel)
-│ └── styles/
-│ └── globals.css
-└── prisma/ (Jika menggunakan Prisma)
-├── schema.prisma
-└── migrations/
-
-Catatan: Struktur di atas merupakan representasi umum berdasarkan percakapan. Beberapa file mungkin belum dibuat atau belum sesuai 100% dengan struktur ini. Sesuaikan dengan file aktual dalam proyek Anda.
 
 Cara Instalasi
 
