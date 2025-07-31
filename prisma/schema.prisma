@@ -33,6 +33,7 @@ model Article {
   title       String
   excerpt     String?
   content     String
+  thumbnail   String?
   author      User      @relation(fields: [authorId], references: [id])
   authorId    Int       @map("author_id")
   categoryId  Int

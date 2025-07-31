@@ -6,8 +6,7 @@ node_modules/
 out/
 
 # Environment variables
-.env*.local
-# Jangan abaikan `.env` jika itu file konfigurasi default yang ingin dikomit
+.env.local
 .env
 
 # Logs
