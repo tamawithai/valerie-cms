@@ -104,17 +104,17 @@ export default function NewArticle() {
       const { categoryId, authorId, ...restOfArticle } = article;
 
       const payload = {
-        ...restOfArticle,
-        thumbnail: article.thumbnail,
-        category: { connect: { id: parseInt(categoryId, 10) } },
-        author: { connect: { id: authorId } }
+        ...article,
+        authorId: article.authorId || 1, // fallback ke 1 jika kosong
+        categoryId: article.categoryId, // WAJIB: dari select dropdown
       };
 
-      const response = await fetch('/api/articles', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+      const response = await fetch("/api/articles", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(payload),
       });
+
 
       if (!response.ok) {
         const errorData = await response.json();

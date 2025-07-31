@@ -38,8 +38,23 @@ export default async function handler(req, res) {
         return res.status(400).json({ message: 'Invalid authorId' });
       }
 
+      if (!authorId || !articleData.categoryId) {
+        return res
+          .status(400)
+          .json({ message: "authorId dan categoryId wajib ada!" });
+      }
+
       const newArticle = await prisma.article.create({
-        data: articleData,
+        data: {
+          title: articleData.title,
+          excerpt: articleData.excerpt,
+          content: articleData.content,
+          thumbnail: articleData.thumbnail,
+          tags: articleData.tags,
+          status: articleData.status,
+          author: { connect: { id: Number(authorId) } },
+          category: { connect: { id: Number(articleData.categoryId) } },
+        },
       });
 
       res.status(201).json(newArticle);
