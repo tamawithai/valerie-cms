@@ -75,12 +75,20 @@ export default function NewArticle() {
     formData.append('file', file);
 
     try {
+      console.log('📤 Uploading thumbnail file:', file);
       const res = await fetch('/api/upload-image', {
         method: 'POST',
         body: formData
       });
-      if (!res.ok) throw new Error('Gagal upload thumbnail');
+      console.log('📥 /api/upload-image status:', res.status);
+      if (!res.ok) {
+          const errText = await res.text();
+          throw new Error('Gagal upload thumbnail: ' + res.status + ' ' + errText);
+        }
+      
+    
       const data = await res.json();
+      console.log('🎉 Upload succeeded, got:', data);
       setArticle(prev => ({ ...prev, thumbnail: data.url }));
     } catch (err) {
       setSubmitError('Upload gambar gagal. ' + err.message);
