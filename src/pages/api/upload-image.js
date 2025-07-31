@@ -1,58 +1,60 @@
-// KODE DIMULAI
-import nc from 'next-connect';
-import multer from 'multer';
-import { uploadImage } from '../../lib/cloudinary';
+// src/pages/api/upload-image.js
 
-// Matikan bodyParser default agar multer bisa menangani multipart/form-data
+// Nonaktifkan bodyParser Next.js agar Formidable bisa parse multipart
 export const config = {
   api: {
     bodyParser: false,
   },
 };
 
-// Inisialisasi multer dengan penyimpanan in-memory
-const upload = multer({ storage: multer.memoryStorage() });
+import { IncomingForm } from 'formidable';
+import fs from 'fs';
+import { uploadImage } from '../../lib/cloudinary';
 
-// Buat handler dengan next-connect
-const handler = nc();
+export default async function handler(req, res) {
+  if (req.method !== 'POST') {
+    res.setHeader('Allow', 'POST');
+    return res.status(405).end('Method Not Allowed');
+  }
 
-// Middleware multer untuk field 'file'
-handler.use(upload.single('file'));
+  // Buat instance Formidable
+  const form = new IncomingForm();
 
-// POST handler untuk upload-image
-handler.post(async (req, res) => {
-  // Debug: cek apakah Cloudinary env sudah terbaca
-  console.log('⚙️ CLOUDINARY ENV:',
-    'KEY?',    !!process.env.CLOUDINARY_API_KEY,
-    'SECRET?', !!process.env.CLOUDINARY_API_SECRET,
-    'CLOUD?',  process.env.NEXT_PUBLIC_CLOUDINARY_CLOUD_NAME
-  );
-  // Debug: cek metadata file yang diterima
-  console.log('📁 REQ.FILE meta:', {
-    originalname: req.file?.originalname,
-    mimetype:     req.file?.mimetype,
-    size:         req.file?.size,
-    bufferLen:    req.file?.buffer?.length
-  });
-
-  try {
-    if (!req.file) {
-      return res.status(400).json({ message: 'No file uploaded' });
+  form.parse(req, async (err, fields, files) => {
+    if (err) {
+      console.error('Form parse error:', err);
+      return res.status(500).json({ message: 'Error parsing form', error: err.message });
     }
 
-    // Upload ke Cloudinary menggunakan helper
-    const cloudinaryRes = await uploadImage(req.file.buffer);
+    // files.file bisa Array atau single File
+    let file = files.file;
+    if (Array.isArray(file)) file = file[0];
 
-    // Kembalikan URL dan public_id
-    return res.status(200).json({
-      url:       cloudinaryRes.url,
-      public_id: cloudinaryRes.public_id,
-    });
-  } catch (error) {
-    console.error('Upload API error:', error);
-    return res.status(500).json({ message: 'Upload failed', error: error.message });
-  }
-});
+    // Dapatkan filepath (Formidable v2) atau path (Formidable v1)
+    const filepath = file?.filepath || file?.path;
+    if (!filepath) {
+      console.error('Invalid file object:', file);
+      return res.status(400).json({ message: 'No valid file path found' });
+    }
 
-export default handler;
-// KODE DI AKHIRI
+    try {
+      // Baca file sementara ke buffer
+      const fileBuffer = fs.readFileSync(filepath);
+
+      // Upload ke Cloudinary
+      const result = await uploadImage(fileBuffer);
+
+      // (Opsional) hapus file sementara
+      // fs.unlinkSync(filepath);
+
+      // Kembalikan URL & public_id
+      return res.status(200).json({
+        url:       result.url,
+        public_id: result.public_id,
+      });
+    } catch (uploadErr) {
+      console.error('Upload to Cloudinary failed:', uploadErr);
+      return res.status(500).json({ message: 'Upload failed', error: uploadErr.message });
+    }
+  });
+}
