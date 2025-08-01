@@ -1,28 +1,12 @@
 // src/pages/admin/dashboard.js
 import Head from 'next/head';
 import Link from 'next/link';
-// Hapus import yang tidak lagi digunakan di halaman ini (seperti useState, useRef, useEffect, useAuth)
-// karena logikanya sudah pindah ke AdminLayout
 import ProtectedRoute from '../../components/ProtectedRoute';
 import AdminLayout from '../../components/AdminLayout';
+import { PrismaClient } from '@prisma/client';
 
-export default function AdminDashboard() {
-  // Semua logika untuk dropdown menu pengguna sudah DIHAPUS dari sini.
-  // Halaman ini sekarang hanya fokus untuk menampilkan konten dashboard.
-
-  const stats = [
-    { name: 'Total Artikel', value: '24', change: '+12%', changeType: 'positive' },
-    { name: 'Pengguna Aktif', value: '8', change: '+3%', changeType: 'positive' },
-    { name: 'Draft', value: '5', change: '+2', changeType: 'positive' },
-    { name: 'Menunggu Moderasi', value: '3', change: '-1', changeType: 'negative' },
-  ];
-
-  const recentArticles = [
-    { id: 1, title: 'Tips Memulai Usaha Kecil', status: 'Published', date: '2025-05-15' },
-    { id: 2, title: 'Strategi Pemasaran Digital', status: 'Draft', date: '2025-05-14' },
-    { id: 3, title: 'Manajemen Keuangan Sederhana', status: 'Pending', date: '2025-05-13' },
-    { id: 4, title: 'Tren UKM 2025', status: 'Published', date: '2025-05-12' },
-  ];
+// stats & recentArticles sekarang dikirim via getServerSideProps
+export default function AdminDashboard({ stats, recentArticles }) {
 
   return (
     <ProtectedRoute>
@@ -130,4 +114,42 @@ export default function AdminDashboard() {
       </AdminLayout>
     </ProtectedRoute>
   );
+}
+
+export async function getServerSideProps() {
+  const prisma = new PrismaClient();
+
+  // Hitung statistik
+  const totalArticles      = await prisma.article.count();
+  const activeUsers        = await prisma.user.count();
+  const draftCount         = await prisma.article.count({ where: { status: 'Draft' } });
+  const pendingCount       = await prisma.article.count({ where: { status: 'Pending' } });
+
+  // Ambil 4 artikel terbaru untuk preview
+  const recentRaw = await prisma.article.findMany({
+    orderBy: { updatedAt: 'desc' },
+    take: 4,
+    include: { author: { select: { name: true } } }
+  });
+
+  await prisma.$disconnect();
+
+  // Bentuk sesuai format yang dipakai UI
+  const stats = [
+    { name: 'Total Artikel',        value: totalArticles,  change: null,     changeType: null },
+    { name: 'Pengguna Aktif',       value: activeUsers,    change: null,     changeType: null },
+    { name: 'Draft',                value: draftCount,     change: null,     changeType: null },
+    { name: 'Menunggu Moderasi',    value: pendingCount,   change: null,     changeType: pendingCount > 0 ? 'negative' : 'positive' },
+  ];
+
+  const recentArticles = recentRaw.map(a => ({
+    id:     a.id,
+    title:  a.title,
+    status: a.status,
+    date:   a.updatedAt.toISOString().split('T')[0], // YYYY-MM-DD
+  }));
+
+  return {
+    props: { stats, recentArticles }
+  };
 }
