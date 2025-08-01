@@ -28,17 +28,20 @@ export default async function handler(req, res) {
     }
   } else if (req.method === 'PUT') {
     try {
-      const { title, excerpt, content, categoryId, tags, status } = req.body;
+      const { title, excerpt, content, categoryId, tags, status, thumbnail } = req.body;
 
       if (!title || !content) {
         return res.status(400).json({ message: 'Title and content are required' });
       }
       
       const updateData = { title, excerpt, content, tags, status };
-      if (categoryId) {
-        updateData.category = {
+       if (thumbnail) {
+         updateData.thumbnail = thumbnail;
+       }
+       if (categoryId) {
+         updateData.category = {
           connect: { id: parseInt(categoryId) }
-        };
+         };
       }
       
       const updatedArticle = await prisma.article.update({
