@@ -1,23 +1,46 @@
 import Head from 'next/head';
 import Link from 'next/link';
-import { useState } from 'react';
-import ProtectedRoute from '../../components/ProtectedRoute'; // Pastikan path ini benar
+import { useState, useEffect } from 'react';
+import { useAuth } from '../../context/AuthContext';
+import ProtectedRoute from '../../components/ProtectedRoute';
+import AdminLayout   from '../../components/AdminLayout';
+
 
 export default function ContributorDashboard() {
   // Data dummy untuk statistik contributor
-  const stats = [
-    { name: 'Artikel Saya', value: '12' },
-    { name: 'Draft', value: '3' },
-    { name: 'Menunggu Moderasi', value: '2' },
-    { name: 'Published', value: '7' },
-  ];
 
-  // Data dummy untuk artikel contributor
-  const myArticles = [
-    { id: 1, title: 'Tips Pemasaran Media Sosial', status: 'Published', date: '2025-05-15' },
-    { id: 2, title: 'Cara Meningkatkan Penjualan Online', status: 'Draft', date: '2025-05-14' },
-    { id: 3, title: 'Strategi Konten yang Efektif', status: 'Pending', date: '2025-05-13' },
-  ];
+const { user } = useAuth();
+const [articles, setArticles]       = useState([]);
+const [stats, setStats]             = useState([]);
+const [myArticles, setMyArticles]   = useState([]);
+const [loadingData, setLoadingData] = useState(true);
+
+// Fetch semua artikel, lalu filter berdasarkan author.id === user.id
+useEffect(() => {
+if (!user) return;
+async function loadMyData() {
+setLoadingData(true);
+ try {
+const res = await fetch('/api/articles');
+if (!res.ok) throw new Error('Gagal memuat artikel');
+const all = await res.json();
+ const mine = all.filter(a => a.author.id === user.id);
+        setMyArticles(mine);
+        setStats([
+          { name: 'Artikel Saya',        value: String(mine.length) },
+          { name: 'Draft',               value: String(mine.filter(a => a.status === 'Draft').length) },
+          { name: 'Menunggu Moderasi',   value: String(mine.filter(a => a.status === 'Pending').length) },
+         { name: 'Published',           value: String(mine.filter(a => a.status === 'Published').length) },
+        ]);
+       } catch (err) {
+         console.error('ContributorDashboard load error:', err);
+      } finally {
+        setLoadingData(false);
+      }
+    }
+    loadMyData();
+  }, [user]);
+
 
   return (
     <ProtectedRoute>
@@ -25,54 +48,8 @@ export default function ContributorDashboard() {
       <Head>
         <title>Dashboard Contributor - Valerie CMS</title>
       </Head>
-
+      <AdminLayout>
       <div className="min-h-screen bg-gray-50">
-        {/* Navbar - versi simplified untuk contributor */}
-        <nav className="bg-white shadow-sm">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex justify-between h-16">
-              <div className="flex">
-                <div className="flex-shrink-0 flex items-center">
-                  <span className="text-xl font-bold text-primary-600">Valerie CMS</span>
-                </div>
-                <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-                  <Link href="/admin/contributor-dashboard" className="border-primary-500 text-gray-900 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                    Dashboard
-                  </Link>
-                  <Link href="/admin/articles" className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">
-                    Artikel Saya
-                  </Link>
-                </div>
-              </div>
-              <div className="flex items-center">
-                <div className="flex-shrink-0">
-                  <Link
-                    href="/admin/articles/new"
-                    className="relative inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-primary-600 shadow-sm hover:bg-primary-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-                  >
-                    <svg className="-ml-1 mr-2 h-5 w-5" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
-                      <path fillRule="evenodd" d="M10 3a1 1 0 011 1v5h5a1 1 0 110 2h-5v5a1 1 0 11-2 0v-5H4a1 1 0 110-2h5V4a1 1 0 011-1z" clipRule="evenodd" />
-                    </svg>
-                    <span>Buat Artikel</span>
-                  </Link>
-                </div>
-                <div className="ml-3 relative">
-                  <div>
-                    <button
-                      type="button"
-                      className="bg-white rounded-full flex text-sm focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-primary-500"
-                    >
-                      <span className="sr-only">Open user menu</span>
-                      <div className="h-8 w-8 rounded-full bg-primary-100 flex items-center justify-center">
-                        <span className="text-primary-800 font-medium">C</span>
-                      </div>
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </nav>
 
         {/* Main Content */}
         <main className="py-6">
@@ -196,6 +173,7 @@ export default function ContributorDashboard() {
           </div>
         </main>
       </div>
+      </AdminLayout>
     </>
     </ProtectedRoute>
   );

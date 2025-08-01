@@ -2,6 +2,7 @@
 import Link from 'next/link';
 import { useState, useRef, useEffect } from 'react';
 import { useAuth } from '../context/AuthContext'; // Path ke AuthContext
+import RoleGuard from './RoleGuard';
 
 export default function AdminLayout({ children }) {
   // --- Logika untuk Dropdown Menu User ---
@@ -35,12 +36,16 @@ export default function AdminLayout({ children }) {
               </div>
               {/* Link Navigasi Utama */}
               <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
-                <Link href="/admin/dashboard" className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Dashboard</Link>
+                <RoleGuard roles={['Admin']}>
+                <Link href="/admin/dashboard" className="border-transparent …">Dashboard</Link>
+                </RoleGuard>
                 <Link href="/admin/articles" className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Artikel</Link>
                 <Link href="/admin/categories" className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Kategori</Link>
+                <RoleGuard roles={['Admin']}>
                 <Link href="/admin/moderation" className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Moderasi</Link>
                 <Link href="/admin/landing" className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Landing Page</Link>
                 <Link href="/admin/users" className="border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 inline-flex items-center px-1 pt-1 border-b-2 text-sm font-medium">Pengguna</Link>
+                </RoleGuard>
               </div>
             </div>
 
